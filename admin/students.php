@@ -561,10 +561,25 @@ require '../db_conn.php';
                 <form action="import_student.php" method="post" enctype="multipart/form-data">
 
                 <div class="mb-3">
-                  <label for="csvFile" class="form-label">Choose CSV file:</label>
-                  <input type="file" class="form-control" id="csvFile" name="csvFile" accept=".csv" required>
+                  <label for="studentFile" class="form-label">Choose CSV/XSL/XSLX file:</label>
+                  <input type="file" class="form-control" id="studentFile" name="studentFile" accept=".csv, .xls, .xlsx" required>
                 </div>
-                
+                <div>
+                  <p class="mb-0">Please ensure that the CSV/XLS/XLSX file follows the correct format to avoid errors during import. The required columns are:</p>
+                  <ul>
+                    <li>SR-Code</li>
+                    <li>LRN</li>
+                    <li>First Name</li>
+                    <li>Middle Name</li>
+                    <li>Last Name</li>
+                </div>
+                <div class="mb-3"> <!-- a note for the user to download the sample CSV file -->
+                  <a href="Import_Student_template.xlsx" class="btn btn-sm btn-outline-primary shadow-sm" download>
+                    <span class="bi bi-download fa-sm me-1"></span> 
+                    Download Sample File
+                  </a>
+                  
+                </div>
 
               </div>
               <div class="modal-footer">
