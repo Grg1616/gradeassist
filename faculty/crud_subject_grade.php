@@ -67,13 +67,13 @@ if (isset($_POST['update_grade'])) {
         }
     }
 
-    // Check if the load_id exists in submit_grades table
-    $check_sql = "SELECT * FROM submit_grades WHERE load_id = '$load_id'";
+    // Check if the load_id exists in submit_grades table for this quarter and faculty
+    $check_sql = "SELECT * FROM submit_grades WHERE load_id = '$load_id' AND quarter = '$quarter' AND faculty_id = '$user_id'";
     $check_result = mysqli_query($conn, $check_sql);
 
     if (mysqli_num_rows($check_result) == 0) {
-        // Insert a new record in submit_grades if load_id doesn't exist
-        $submit_sql = "INSERT INTO submit_grades (load_id, faculty_id, status) VALUES ('$load_id', '$user_id', 'submit')";
+        // Insert a new record in submit_grades if no record exists for this load/quarter/faculty
+        $submit_sql = "INSERT INTO submit_grades (load_id, faculty_id, status, quarter) VALUES ('$load_id', '$user_id', 'submit', '$quarter')";
         mysqli_query($conn, $submit_sql);
     }
 

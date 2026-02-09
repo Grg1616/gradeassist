@@ -155,16 +155,8 @@ if (isset($_SESSION['message_danger'])) {
 // Retrieve load_id and faculty_id
 $load_id = mysqli_real_escape_string($conn, $_GET['load_id']); // Assuming load_id is passed via GET or you can replace it accordingly
 $faculty_id = mysqli_real_escape_string($conn, $_SESSION['user_id']); // Get faculty_id from session
-
-// Check if load_id and faculty_id with status 'submit' exist in the submit_grades table
-$sql = "SELECT * FROM submit_grades WHERE load_id = '$load_id' AND faculty_id = '$faculty_id' AND status = 'submit'";
-$result = mysqli_query($conn, $sql);
-
-// Flag to check if the grade submission is already done
+// Initialize submission flag; actual check runs after $quarter is determined
 $is_submitted = false;
-if (mysqli_num_rows($result) > 0) {
-    $is_submitted = true;
-}
 ?>
 
 <?php
@@ -212,6 +204,13 @@ if ($result) {
 
 // Free the result set
 mysqli_free_result($result);
+
+// Check if load_id and faculty_id with status 'submit' exist in the submit_grades table for this quarter
+$submit_check_sql = "SELECT * FROM submit_grades WHERE load_id = '$load_id' AND faculty_id = '$faculty_id' AND status = 'submit' AND quarter = '$quarter'";
+$submit_check_result = mysqli_query($conn, $submit_check_sql);
+if ($submit_check_result && mysqli_num_rows($submit_check_result) > 0) {
+    $is_submitted = true;
+}
 ?>
 
 <?php

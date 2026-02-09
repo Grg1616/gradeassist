@@ -689,6 +689,7 @@ CREATE TABLE `submit_grades` (
   `id` int(11) NOT NULL,
   `load_id` int(11) NOT NULL,
   `faculty_id` int(11) NOT NULL,
+  `quarter` int(11) NOT NULL DEFAULT '1',
   `status` varchar(50) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -698,8 +699,8 @@ CREATE TABLE `submit_grades` (
 -- Dumping data for table `submit_grades`
 --
 
-INSERT INTO `submit_grades` (`id`, `load_id`, `faculty_id`, `status`, `dateCreated`, `dateUpdated`) VALUES
-(1, 4, 1, 'submit', '2025-03-22 15:28:40', '2025-03-22 15:28:40');
+INSERT INTO `submit_grades` (`id`, `load_id`, `faculty_id`, `quarter`, `status`, `dateCreated`, `dateUpdated`) VALUES
+(1, 4, 1, 1, 'submit', '2025-03-22 15:28:40', '2025-03-22 15:28:40');
 
 -- --------------------------------------------------------
 
