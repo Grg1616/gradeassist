@@ -28,7 +28,7 @@ if(isset($_GET['page'])) {
     <nav>
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="navbar_faculty.php">Home</a></li>
-            <li class="breadcrumb-item">Reports</li>
+            <li class="breadcrumb-item"><a href="reports.php">Reports</a></li>
             <li class="breadcrumb-item active"><?php echo ucfirst(str_replace('_', ' ', substr($page, 0, -4))); ?></li>
         </ol>
     </nav>

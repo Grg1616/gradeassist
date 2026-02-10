@@ -120,7 +120,7 @@ div.dt-buttons > div.dt-button-split .dt-button:hover:not(.disabled) {
 
 .my-sweetalert {
     padding-bottom: 40px; /* You can adjust the padding value as needed */
-
+}
 </style>
 
 <body>

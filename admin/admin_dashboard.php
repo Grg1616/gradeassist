@@ -303,7 +303,7 @@ require '../db_conn.php';
                   <img src="../assets/img/print.png" alt="Profile" class="img-fluid" style="width:80px; height: 80px;">
                 </div>
                 <div class="col-lg-8 col mt-1">
-                  <h1 class="fw-bold text-white text-end mb-0" style="color: #012970;">Generate</h1>
+                  <h1 class="fw-bold text-white text-end mb-0" style="color: #012970; font-size: xx-large;">Generate</h1>
                   <h5 class="text-white text-end mb-0">Reports</h5>
                 </div>
               </div>

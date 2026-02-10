@@ -21,8 +21,8 @@ unset($_SESSION['page']);
       <h1>Reports</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="navbar_faculty.php">Home</a></li>
-          <li class="breadcrumb-item active">Reports</li>
+          <li class="breadcrumb-item"><a href="faculty_dashboard.php">Home</a></li>
+          <li class="breadcrumb-item active"><a href="reports.php">Reports</a></li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
