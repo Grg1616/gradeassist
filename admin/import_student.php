@@ -4,12 +4,16 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
 
     require '../db_conn.php';
 
-    // Updated expected header columns to match Import_Student_template (2).xlsx
+    // FIXED: Updated expected header columns to EXACTLY match Import_Student_template (2).xlsx
+    // Note the spelling differences in the Excel file:
+    // - "Email Adress" (missing 'd' in Address)
+    // - "Home Adress" (missing 'd' in Address)
+    // - Guardian section has "Email Adresss" (extra 's')
     $expectedHeaders = [
-        'SR-Code','LRN','First Name','Last Name','Middle Name','Gender','Birthday','Religion','Contact Number','Email Address','Home Address',
+        'SR-Code','LRN','First Name','Last Name','Middle Name','Gender','Birthday','Religion','Contact Number','Email Adress','Home Adress',
         'Fathers Name','Father Occupation','Father Contact','Father Email',
         'Mothers Name','Mother Occupation','Mother Contact','Mother Email',
-        'Guardian Name','Guardian Occupation','Guardian Contact','Guardian Email'
+        'Guardian Name','Occupation','Contact Number','Email Adresss'
     ];
 
     // Helper: normalize header text
@@ -123,6 +127,11 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
         }
 
         if ($headerIndex === null) {
+            // Debug: Show what was found vs expected
+            $foundHeaders = array_slice($rows[0], 0, count($expectedHeaders));
+            error_log("Expected headers: " . implode(", ", $expectedHeaders));
+            error_log("Found headers: " . implode(", ", $foundHeaders));
+            
             $_SESSION['message_danger'] = 'Invalid header format. Please use the correct Import_Student_template.xlsx.';
             header('Location: students.php'); exit();
         }
@@ -158,26 +167,29 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
             // Father details
             $fatherName = isset($data[11]) ? ucwords(strtolower(trim($data[11]))) : '';
             $fatherOccupation = isset($data[12]) ? ucwords(strtolower(trim($data[12]))) : '';
-                $fatherContact = isset($data[13]) ? trim($data[13]) : '';
-                $fatherEmail = isset($data[14]) ? trim($data[14]) : '';
+            $fatherContact = isset($data[13]) ? trim($data[13]) : '';
+            $fatherEmail = isset($data[14]) ? trim($data[14]) : '';
             
             // Mother details
             $motherName = isset($data[15]) ? ucwords(strtolower(trim($data[15]))) : '';
             $motherOccupation = isset($data[16]) ? ucwords(strtolower(trim($data[16]))) : '';
-                $motherContact = isset($data[17]) ? trim($data[17]) : '';
-                $motherEmail = isset($data[18]) ? trim($data[18]) : '';
+            $motherContact = isset($data[17]) ? trim($data[17]) : '';
+            $motherEmail = isset($data[18]) ? trim($data[18]) : '';
             
             // Guardian details
             $guardianName = isset($data[19]) ? ucwords(strtolower(trim($data[19]))) : '';
             $guardianOccupation = isset($data[20]) ? ucwords(strtolower(trim($data[20]))) : '';
-                $guardianContact = isset($data[21]) ? trim($data[21]) : '';
-                $guardianEmail = isset($data[22]) ? trim($data[22]) : '';
+            $guardianContact = isset($data[21]) ? trim($data[21]) : '';
+            $guardianEmail = isset($data[22]) ? trim($data[22]) : '';
 
-            // Normalize birthday to YYYY-MM-DD if possible
-            $birthday = null;
+            // Normalize birthday to YYYY-MM-DD if possible - FIX: Handle empty birthdays
+            $birthday = '1970-01-01'; // Default date if birthday is empty
             if ($birthday_raw !== '') {
+                // Try to parse the date
                 $ts = strtotime(str_replace('/', '-', $birthday_raw));
-                if ($ts !== false) $birthday = date('Y-m-d', $ts);
+                if ($ts !== false) {
+                    $birthday = date('Y-m-d', $ts);
+                }
             }
 
             if ($sr_code === '') continue;
@@ -188,23 +200,22 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
             $row = $result->fetch_assoc();
 
             if ($row['count'] == 0) {
-                $birthday_val = $birthday ? "'" . $birthday . "'" : "NULL";
+                // Prepare parent/guardian SQL values (NULL when empty)
+                $fatherName_val = sql_val_or_null($conn, $fatherName);
+                $fatherOccupation_val = sql_val_or_null($conn, $fatherOccupation);
+                $fatherContact_val = sql_val_or_null($conn, $fatherContact);
+                $fatherEmail_val = sql_val_or_null($conn, $fatherEmail);
 
-                    // Prepare parent/guardian SQL values (NULL when empty)
-                    $fatherName_val = sql_val_or_null($conn, $fatherName);
-                    $fatherOccupation_val = sql_val_or_null($conn, $fatherOccupation);
-                    $fatherContact_val = sql_val_or_null($conn, $fatherContact);
-                    $fatherEmail_val = sql_val_or_null($conn, $fatherEmail);
+                $motherName_val = sql_val_or_null($conn, $motherName);
+                $motherOccupation_val = sql_val_or_null($conn, $motherOccupation);
+                $motherContact_val = sql_val_or_null($conn, $motherContact);
+                $motherEmail_val = sql_val_or_null($conn, $motherEmail);
 
-                    $motherName_val = sql_val_or_null($conn, $motherName);
-                    $motherOccupation_val = sql_val_or_null($conn, $motherOccupation);
-                    $motherContact_val = sql_val_or_null($conn, $motherContact);
-                    $motherEmail_val = sql_val_or_null($conn, $motherEmail);
-
-                    $guardianName_val = sql_val_or_null($conn, $guardianName);
-                    $guardianOccupation_val = sql_val_or_null($conn, $guardianOccupation);
-                    $guardianContact_val = sql_val_or_null($conn, $guardianContact);
-                    $guardianEmail_val = sql_val_or_null($conn, $guardianEmail);
+                $guardianName_val = sql_val_or_null($conn, $guardianName);
+                $guardianOccupation_val = sql_val_or_null($conn, $guardianOccupation);
+                $guardianContact_val = sql_val_or_null($conn, $guardianContact);
+                $guardianEmail_val = sql_val_or_null($conn, $guardianEmail);
+                
                 $sql = "INSERT INTO students 
                     (sr_code, lrn, firstName, middleName, lastName, gender, birthday, religion, contactNumber, email, homeAddress,
                      fatherName, fatherOccupation, fatherContact, fatherEmail,
@@ -217,7 +228,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                      '" . mysqli_real_escape_string($conn, $middleName) . "', 
                      '" . mysqli_real_escape_string($conn, $lastName) . "',
                      '" . mysqli_real_escape_string($conn, $gender) . "', 
-                     " . $birthday_val . ", 
+                     '" . mysqli_real_escape_string($conn, $birthday) . "', 
                      '" . mysqli_real_escape_string($conn, $religion) . "', 
                      '" . mysqli_real_escape_string($conn, $contact) . "', 
                      '" . mysqli_real_escape_string($conn, $email) . "', 
@@ -286,4 +297,4 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
     header('Location: ../admin_login.php');
     exit();
 }
-?>
+?>  
