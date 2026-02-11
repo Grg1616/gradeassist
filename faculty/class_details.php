@@ -16,10 +16,26 @@ require '../db_conn.php';
 .input:focus {
     border-color: transparent; /* Ensures border remains hidden even on focus */
 }
+
+/* Add these styles for exceeded values */
+.input.exceeded {
+    background-color: #ffebee !important;
+    border: 1px solid #f44336 !important;
+    color: #f44336 !important;
+}
+
+.cell-exceeded {
+    background-color: #ffebee !important;
+    border: 1px solid #f44336 !important;
+}
+
+.input:focus {
+    background-color: #f0f8ff !important;
+}
 </style>
 <style>
     /* Hide input fields by default */
-    .editable {
+    .editable, .custom-editable, .third-editable {
         display: none;
     }
 </style>
@@ -152,8 +168,8 @@ if (isset($_SESSION['message_danger'])) {
 
 
 <?php
-// Retrieve load_id and faculty_id
-$load_id = mysqli_real_escape_string($conn, $_GET['load_id']); // Assuming load_id is passed via GET or you can replace it accordingly
+$load_id = isset($_GET['load_id']) ? mysqli_real_escape_string($conn, $_GET['load_id']) : '';
+// Retrieve faculty_id
 $faculty_id = mysqli_real_escape_string($conn, $_SESSION['user_id']); // Get faculty_id from session
 // Initialize submission flag; actual check runs after $quarter is determined
 $is_submitted = false;
@@ -175,8 +191,8 @@ if ($result) {
         // Fetch the first row
         $row = mysqli_fetch_assoc($result);
         
-        $class_id = $_GET['class_id'];
-        $load_id = $_GET['load_id'];
+        $class_id = isset($_GET['class_id']) ? mysqli_real_escape_string($conn, $_GET['class_id']) : '';
+        $load_id = isset($_GET['load_id']) ? mysqli_real_escape_string($conn, $_GET['load_id']) : $load_id;
         $school_year = $row['school_year'];
         $sem_query = "SELECT semester FROM loads WHERE id = '$load_id' AND class_id = '$class_id' AND school_year_id  = '$school_year'";
             $sem_result = mysqli_query($conn, $sem_query);
@@ -191,9 +207,9 @@ if ($result) {
         $quarter = $row['quarter'];
 
     } else {
-        $class_id = $_GET['class_id'];
-        $load_id = $_GET['load_id'];
-        $school_year = $_GET['school_year'];
+        $class_id = isset($_GET['class_id']) ? mysqli_real_escape_string($conn, $_GET['class_id']) : '';
+        $load_id = isset($_GET['load_id']) ? mysqli_real_escape_string($conn, $_GET['load_id']) : '';
+        $school_year = isset($_GET['school_year']) ? mysqli_real_escape_string($conn, $_GET['school_year']) : $school_year;
         $semester = 1;
         $quarter = 1;
     }
@@ -228,7 +244,7 @@ $query = "
     JOIN 
         loads l ON s.id = l.subject_id
     WHERE 
-        l.id = $load_id
+        l.id = '$load_id'
         AND (
             (s.gradeLevel IN ('Kinder', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6') AND gs.level = 'Elementary') OR
             (s.gradeLevel IN ('Grade 7', 'Grade 8', 'Grade 9', 'Grade 10') AND gs.level = 'High School') OR
@@ -260,8 +276,6 @@ if (mysqli_num_rows($result) > 0) {
     $assessment = "0";
     $level = "0";
 }
-
-echo $level;
 ?>
 
 
@@ -1058,8 +1072,23 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
 
                                                 <?php if (!empty($wps_value)): ?>
                                                     <td style="height: 30px;">
-                                                        <span class="readonly" id="w<?php echo $i; ?>"><?php echo isset($row_ww['w'.$i]) ? $row_ww['w'.$i] : ''; ?></span>
-                                                        <input class="editable input" type="text" id="w<?php echo $i; ?>_input" name="w<?php echo $i; ?>[<?php echo $student_id; ?>]" value="<?php echo isset($row_ww['w'.$i]) ? $row_ww['w'.$i] : ''; ?>" size="2" style="text-align: center;" onkeypress="return isNumberKey(event)" oninput="checkValue(this, <?php echo $wps_value; ?>)">
+                                                        <span class="readonly" id="w<?php echo $i; ?>_<?php echo $student_id; ?>"><?php echo isset($row_ww['w'.$i]) ? $row_ww['w'.$i] : ''; ?></span>
+                                                        <input class="editable input score-input" 
+                                                               type="text" 
+                                                               id="w<?php echo $i; ?>_input_<?php echo $student_id; ?>"
+                                                               name="w<?php echo $i; ?>[<?php echo $student_id; ?>]" 
+                                                               value="<?php echo isset($row_ww['w'.$i]) ? $row_ww['w'.$i] : ''; ?>" 
+                                                               size="2" 
+                                                               style="text-align: center;" 
+                                                               onkeypress="return isNumberKey(event)" 
+                                                               oninput="validateAndCalculate(this, <?php echo $wps_value; ?>, '<?php echo $student_id; ?>', 'written')"
+                                                               data-hps="<?php echo $wps_value; ?>"
+                                                               data-student-id="<?php echo $student_id; ?>"
+                                                               data-type="written"
+                                                               data-column="<?php echo $i; ?>"
+                                                               data-total-columns="10"
+                                                               onkeydown="navigateWithArrows(event, this)"
+                                                               maxlength="3">
                                                     </td>
                                                 <?php else: ?>
                                                     <td style="height: 30px;"></td>
@@ -1077,20 +1106,20 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
 
                                             <td></td>
                                             <?php if ($result): ?>
-                                                <td><?php echo $w_score_total; ?></td>
+                                                <td id="ww_total_<?php echo $student_id; ?>"><?php echo $w_score_total; ?></td>
                                             <?php endif; ?>
                                             <?php 
                                                 if ($wpstotal != 0 && $written != 0) {
                                                     $written_ps = number_format(($w_score_total / $wpstotal) * 100, 2);
-                                                    $written_percentage = number_format($written / 100, 2); // Convert $written to percentage and format to 2 decimal places
-                                                    $written_ws = number_format($written_ps * $written_percentage, 2); // Multiply $percentage by $written percentage and format to 2 decimal places
+                                                    $written_percentage = number_format($written / 100, 2);
+                                                    $written_ws = number_format($written_ps * $written_percentage, 2);
                                                 } else {
                                                     $written_ps = 0;
                                                     $written_ws = 0;
                                                 }
                                             ?>
-                                            <td><?php echo $written_ps; ?></td>
-                                            <td><?php echo $written_ws; ?></td>
+                                            <td id="ww_ps_<?php echo $student_id; ?>"><?php echo $written_ps; ?></td>
+                                            <td id="ww_ws_<?php echo $student_id; ?>"><?php echo $written_ws; ?></td>
 
                                         </tr>
                                 <?php
@@ -1270,9 +1299,23 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
 
                                                     <?php if (!empty($pps_value)): ?>
                                                         <td style="height: 30px;">
-                                                            <span class="custom-readonly" id="pt<?php echo $i; ?>"><?php echo isset($row_pt['pt'.$i]) ? $row_pt['pt'.$i] : ''; ?></span>
-                                                            <input class="custom-editable input" type="text" id="pt<?php echo $i; ?>_input" name="pt<?php echo $i; ?>[<?php echo $student_id; ?>]" value="<?php echo isset($row_pt['pt'.$i]) ? $row_pt['pt'.$i] : ''; ?>" size="2" style="text-align: center;" onkeypress="return isNumberKey(event)" oninput="checkValue(this, <?php echo $pps_value; ?>)">
-
+                                                            <span class="custom-readonly" id="pt<?php echo $i; ?>_<?php echo $student_id; ?>"><?php echo isset($row_pt['pt'.$i]) ? $row_pt['pt'.$i] : ''; ?></span>
+                                                            <input class="custom-editable input score-input" 
+                                                                   type="text" 
+                                                                   id="pt<?php echo $i; ?>_input_<?php echo $student_id; ?>"
+                                                                   name="pt<?php echo $i; ?>[<?php echo $student_id; ?>]" 
+                                                                   value="<?php echo isset($row_pt['pt'.$i]) ? $row_pt['pt'.$i] : ''; ?>" 
+                                                                   size="2" 
+                                                                   style="text-align: center;" 
+                                                                   onkeypress="return isNumberKey(event)" 
+                                                                   oninput="validateAndCalculate(this, <?php echo $pps_value; ?>, '<?php echo $student_id; ?>', 'performance')"
+                                                                   data-hps="<?php echo $pps_value; ?>"
+                                                                   data-student-id="<?php echo $student_id; ?>"
+                                                                   data-type="performance"
+                                                                   data-column="<?php echo $i; ?>"
+                                                                   data-total-columns="10"
+                                                                   onkeydown="navigateWithArrows(event, this)"
+                                                                   maxlength="3">
                                                         </td>
                                                     <?php else: ?>
                                                         <td style="height: 30px;"></td>
@@ -1290,20 +1333,20 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
 
                                             <td></td>
                                             <?php if ($result): ?>
-                                                <td><?php echo $p_score_total; ?></td>
+                                                <td id="pt_total_<?php echo $student_id; ?>"><?php echo $p_score_total; ?></td>
                                             <?php endif; ?>
                                             <?php 
                                                 if ($pps_total != 0 && $performance != 0) {
                                                     $performance_ps = number_format(($p_score_total / $pps_total) * 100, 2);
-                                                    $performance_percentage = number_format($performance / 100, 2); // Convert $written to percentage and format to 2 decimal places
-                                                    $performance_ws = number_format($performance_ps * $performance_percentage, 2); // Multiply $percentage by $written percentage and format to 2 decimal places
+                                                    $performance_percentage = number_format($performance / 100, 2);
+                                                    $performance_ws = number_format($performance_ps * $performance_percentage, 2);
                                                 } else {
                                                     $performance_ps = 0;
                                                     $performance_ws = 0;
                                                 }
                                             ?>
-                                            <td><?php echo $performance_ps; ?></td>
-                                            <td><?php echo $performance_ws; ?></td>
+                                            <td id="pt_ps_<?php echo $student_id; ?>"><?php echo $performance_ps; ?></td>
+                                            <td id="pt_ws_<?php echo $student_id; ?>"><?php echo $performance_ws; ?></td>
 
                                         </tr>
                                 <?php
@@ -1333,637 +1376,637 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                 <!-- End for Table for Performance Task -->
             </div>
 
-            <div class="tab-pane fade" id="quarterly-assessment" role="tabpanel" aria-labelledby="quarterly-assessment-tab">
-                <!-- Table for Performance Task -->
-                 <div class="table-responsive">
-                    <table class="table table-sm table-hover table-bordered" style="width: 100%;">
-                        <thead>
+         <div class="tab-pane fade" id="quarterly-assessment" role="tabpanel" aria-labelledby="quarterly-assessment-tab">
+    <!-- Table for Quarterly Assessment -->
+    <div class="table-responsive">
+        <table class="table table-sm table-hover table-bordered" style="width: 100%;">
+            <thead>
+                <tr class="text-center small" style="white-space: nowrap;">
+                    <th colspan="3"></th>
+                    <th style="width: 50px;"></th> 
+                    <td style="width: 50px;"></td> 
+                    <th style="width: 50px;">Total</th> 
+                    <th style="width: 50px;">PS</th> 
+                    <th style="width: 50px;">WS</th> 
+                </tr>
+                <tr class="text-center small" style="white-space: nowrap;">
+                    <td colspan="3" class="text-end fw-semibold">Highest Possible Score</td>
+                    <form action="crud_quarterly.php" method="POST">
+                    <?php
+                    $qps_total = 0;
+                    $qa_id = null;
+
+                    function addQATotal(&$qps_total, $value) {
+                        if (is_numeric($value)) {
+                            $qps_total += (int)$value;
+                        }
+                    }
+
+                    $query = "SELECT id, ps 
+                              FROM quarterly_assessment 
+                              WHERE load_id = '$load_id' 
+                              AND school_year_id = '$school_year' 
+                              AND quarter = '$quarter'";
+
+                    $result = mysqli_query($conn, $query);
+
+                    if ($result) {
+                        if (mysqli_num_rows($result) > 0) {
+                            $row = mysqli_fetch_assoc($result);
+                            $qa_id = $row['id'];
+                            $value = isset($row['ps']) ? $row['ps'] : 0;
+                            addQATotal($qps_total, $value);
+                            echo "<td><input class='input' type='text' name='ps' value='" . (isset($row['ps']) ? $row['ps'] : '') . "' size=2 style='text-align: center;' onkeypress='return isNumberKey(event)' oninput='maxLengthCheck(this)' maxlength='2'></td>";
+                        } else {
+                            echo "<td><input class='input' type='text' name='ps' value='' size=2 style='text-align: center;' onkeypress='return isNumberKey(event)' oninput='maxLengthCheck(this)' maxlength='2'></td>";
+                        }
+                    } else {
+                        echo "Error: " . mysqli_error($conn);
+                    }
+                    ?>
+
+                    <style>
+                        .input {
+                            border: none;
+                        }
+                    </style>
+                    <input type="hidden" id="load_id" name="load_id" value="<?= $load_id ?? '' ?>">
+                    <input type="hidden" id="class_id" name="class_id" value="<?= $class_id ?? '' ?>">
+                    <input type="hidden" id="school_year" name="school_year" value="<?= $school_year ?? '' ?>">
+                    <input type="hidden" id="quarter" name="quarter" value="<?= $quarter ?? '' ?>">
+                    <td>
+                        <button type="submit" name="qa" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                    </td>
+                    <td><?= $qps_total ?: '0' ?></td>
+                    </form>
+                    <td>100.00</td>
+                    <td><?php echo $assessment; ?>%</td>
+                </tr>
+            </thead>
+            <tbody>
+                <form action="crud_quarterly.php" method="POST">
+                    <tr class="text-center small" style="white-space: nowrap;">
+                        <td class="fw-semibold">#</td>
+                        <td class="text-start fw-semibold">Sr-Code</td>
+                        <td class="text-start fw-semibold">Student Name</td>
+                        <td colspan="14"></td>
+                    </tr>
+                    <?php
+                    $no = 1;
+                    $query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.id as student_id
+                                FROM students s 
+                                JOIN class_students cs ON s.id = cs.student_id 
+                                JOIN class c ON cs.class_id = c.id
+                                JOIN loads l ON c.id = l.class_id 
+                                WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
+                                ORDER BY s.lastName";
+
+                    $query_run = mysqli_query($conn, $query);
+
+                    if ($query_run) {
+                        while ($row = mysqli_fetch_assoc($query_run)) {
+                            $student_id = $row['student_id'];
+                    ?>
                             <tr class="text-center small" style="white-space: nowrap;">
-                                <th colspan="3"></th>
-                               
-                                <th style="width: 50px;"></th> 
-                                
-                                <td style="width: 50px;"></td> 
-                                <th style="width: 50px;">Total</th> 
-                                <th style="width: 50px;">PS</th> 
-                                <th style="width: 50px;">WS</th> 
-                                <!-- Add 13 more columns here -->
-                            </tr>
-                            <tr class="text-center small" style="white-space: nowrap;">
-                                <td colspan="3" class="text-end fw-semibold">Highest Possible Score</td>
-                                <form action="crud_quarterly.php" method="POST">
+                                <td class=""><?php echo $no; ?></td>
+                                <td class="text-start"><?php echo $row['sr_code']; ?></td>
+                                <td class="text-start"><?php echo ucwords(strtolower($row['lastName'])) . ', ' . ucwords(strtolower($row['firstName'])) . ' ' . ucwords(substr($row['middleName'], 0, 1)) . '.'; ?>
+                                </td>
                                 <?php
-                                $qps_total = 0; // Initialize $total for performance task
-                                $qa_id = null;
-
-                                // Cast and add $value to $total
-                                function addQATotal(&$qps_total, $value) {
-                                    if (is_numeric($value)) {
-                                        $qps_total += (int)$value;
-                                    }
-                                }
-
-                                // Query to retrieve performance tasks
-                                $query = "SELECT id, ps 
-                                          FROM quarterly_assessment 
-                                          WHERE load_id = '$load_id' 
-                                          AND school_year_id = '$school_year' 
-                                          AND quarter = '$quarter'";
-
+                                $query = "SELECT score, id FROM qa_score WHERE student_id = '$student_id' AND load_id = '$load_id' AND school_year_id = '$school_year' AND quarter = '$quarter'";
                                 $result = mysqli_query($conn, $query);
 
+                                $score_value = '';
+                                $qa_score_id = null;
                                 if ($result) {
-                                    if (mysqli_num_rows($result) > 0) {
-                                        $row = mysqli_fetch_assoc($result);
-                                        $qa_id = $row['id']; // Store the id value
-                                        $value = isset($row['ps']) ? $row['ps'] : 0;
-                                        addQATotal($qps_total, $value); // Add to total using the function
-                                        echo "<td><input class='input' type='text' name='ps' value='" . (isset($row['ps']) ? $row['ps'] : '') . "' size=2 style='text-align: center;' onkeypress='return isNumberKey(event)' oninput='maxLengthCheck(this)' maxlength='2'></td>";
-                                    } else {
-                                        echo "<td><input class='input' type='text' name='ps' value='' size=2 style='text-align: center;' onkeypress='return isNumberKey(event)' oninput='maxLengthCheck(this)' maxlength='2'></td>";
+                                    $q_score_total = 0;
+                                    while ($row_qa = mysqli_fetch_assoc($result)) {
+                                        if (isset($row_qa['score']) && is_numeric($row_qa['score'])) {
+                                            $q_score_total += $row_qa['score'];
+                                            $score_value = $row_qa['score'];
+                                            $qa_score_id = $row_qa['id'];
+                                        }
                                     }
+                                    mysqli_free_result($result);
                                 } else {
-                                    echo "Error: " . mysqli_error($conn);
+                                    echo "Error executing query: " . mysqli_error($conn);
                                 }
                                 ?>
 
-                                <style>
-                                    .input {
-                                        border: none; /* Removes the border */
+                                <?php 
+                                if ($result) {
+                                    $qa_column = 'ps';
+                                    $query_qa = "SELECT $qa_column FROM quarterly_assessment WHERE load_id = '$load_id' AND school_year_id = '$school_year' AND quarter = '$quarter'";
+                                    $result_qa = mysqli_query($conn, $query_qa);
+                                    
+                                    if ($result_qa) {
+                                        $row_qqa = mysqli_fetch_assoc($result_qa);
+                                        
+                                        if ($row_qqa) {
+                                            $qa_value = $row_qqa[$qa_column];
+                                            
+                                            if (!empty($qa_value)) { ?>
+                                                <td>
+                                                    <span class="third-readonly" id="score_<?php echo $student_id; ?>"><?php echo $score_value; ?></span>
+                                                    <input class="third-editable input score-input" 
+                                                           type="text" 
+                                                           id="qa_input_<?php echo $student_id; ?>"
+                                                           name="score[<?php echo $student_id; ?>]" 
+                                                           value="<?php echo $score_value; ?>" 
+                                                           size="2" 
+                                                           style="text-align: center;" 
+                                                           onkeypress="return isNumberKey(event)" 
+                                                           oninput="validateAndUpdateQuarterly(this, <?php echo $qa_value; ?>, '<?php echo $student_id; ?>')"
+                                                           data-hps="<?php echo $qa_value; ?>"
+                                                           data-student-id="<?php echo $student_id; ?>"
+                                                           data-type="quarterly"
+                                                           data-column="1"
+                                                           data-total-columns="1"
+                                                           onkeydown="navigateWithArrows(event, this)"
+                                                           maxlength="3">
+                                                </td>
+                                            <?php } else { ?>
+                                                <td style="height: 30px;"></td>
+                                            <?php }
+                                        }
+                                        mysqli_free_result($result_qa);
                                     }
-                                </style>
+                                } 
+                                ?>
+
                                 <input type="hidden" id="load_id" name="load_id" value="<?= $load_id ?? '' ?>">
                                 <input type="hidden" id="class_id" name="class_id" value="<?= $class_id ?? '' ?>">
                                 <input type="hidden" id="school_year" name="school_year" value="<?= $school_year ?? '' ?>">
                                 <input type="hidden" id="quarter" name="quarter" value="<?= $quarter ?? '' ?>">
-                                <td>
-                                    <button type="submit" name="qa" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </button>
-                                </td>
-                                <td><?= $qps_total ?: '0' ?></td>
-                                </form>
+                                <?php if($qa_score_id): ?>
+                                <input type="hidden" id="qa_score_id" name="qa_score_id[<?php echo $student_id; ?>]" value="<?php echo $qa_score_id; ?>">
+                                <?php endif; ?>
+                                <input type="hidden" id="qa_id" name="qa_id" value="<?= $qa_id ?? '' ?>">
+                                <input type="hidden" id="student_id" name="student_id[]" value="<?= $student_id ?? '' ?>">
 
-                                <td>100.00</td>
-                                <td><?php echo $assessment; ?>%</td>
-                                <!-- Add 13 more columns here -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <form action="crud_quarterly.php" method="POST">
-                                <tr class="text-center small" style="white-space: nowrap;">
-                                    <td class="fw-semibold">#</td>
-                                    <td class="text-start fw-semibold">Sr-Code</td>
-                                    <td class="text-start fw-semibold">Student Name</td>
-                                    <td colspan="14"></td>
-                                </tr>
-                                <?php
-                                $no = 1;
-
-                                $query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.id as student_id
-                                            FROM students s 
-                                            JOIN class_students cs ON s.id = cs.student_id 
-                                            JOIN class c ON cs.class_id = c.id
-                                            JOIN loads l ON c.id = l.class_id 
-                                            WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
-                                            ORDER BY s.lastName";
-
-                                $query_run = mysqli_query($conn, $query);
-
-                                if ($query_run) {
-                                    while ($row = mysqli_fetch_assoc($query_run)) {
-                                        $student_id = $row['student_id'];
-                                ?>
-                                        <tr class="text-center small" style="white-space: nowrap;">
-                                            <td class=""><?php echo $no; ?></td>
-                                            <td class="text-start"><?php echo $row['sr_code']; ?></td>
-                                            <td class="text-start"><?php echo ucwords(strtolower($row['lastName'])) . ', ' . ucwords(strtolower($row['firstName'])) . ' ' . ucwords(substr($row['middleName'], 0, 1)) . '.'; ?>
-                                            </td>
-                                            <?php
-                                            $query = "SELECT score, id FROM qa_score WHERE student_id = '$student_id' AND load_id = '$load_id' AND school_year_id = '$school_year' AND quarter = '$quarter' AND qa_id = '$qa_id'";
-                                            $result = mysqli_query($conn, $query);
-
-                                            $score_value = ''; // Default value if score is not found
-                                            if ($result) {
-                                                $q_score_total = 0;
-                                                while ($row_qa = mysqli_fetch_assoc($result)) {
-                                                    if (isset($row_qa['score']) && is_numeric($row_qa['score'])) {
-                                                        $q_score_total += $row_qa['score'];
-                                                        $score_value = $row_qa['score']; // Update $score_value with the retrieved score
-                                                    }
-                                                }
-                                                mysqli_free_result($result);
-                                            } else {
-                                                echo "Error executing query: " . mysqli_error($conn);
-                                            }
-                                            ?>
-
-                                            <?php 
-                                            if ($result) {
-                                                $qa_column = 'ps';
-                                                $query_qa = "SELECT $qa_column FROM quarterly_assessment WHERE id = '$qa_id'";
-                                                $result_qa = mysqli_query($conn, $query_qa);
-                                                
-                                                if ($result_qa) {
-                                                    $row_qqa = mysqli_fetch_assoc($result_qa);
-                                                    
-                                                    if ($row_qqa) {
-                                                        $qa_value = $row_qqa[$qa_column];
-                                                        
-                                                        if (!empty($qa_value)) { ?>
-                                                            <td>
-                                                                <span class="third-readonly" id="score"><?php echo $score_value; ?></span>
-                                                                <input class="third-editable input" type="text" id="score" name="score[<?php echo $student_id; ?>]" value="<?php echo $score_value; ?>" size="2" style="text-align: center;" onkeypress="return isNumberKey(event)" oninput="checkValue(this, <?php echo $qa_value; ?>)">
-                                                            </td>
-                                                        <?php } else { ?>
-                                                            <td style="height: 30px;"></td>
-                                                        <?php }
-                                                    } else {
-                                                    }
-                                                    
-                                                    mysqli_free_result($result_qa);
-                                                } else {
-                                                    // Handle query execution failure
-                                                    echo "Error executing the query: " . mysqli_error($conn);
-                                                }
-                                            } 
-                                            ?>
-
-                                            
-                                            <input type="hidden" id="load_id" name="load_id" value="<?= $load_id ?? '' ?>">
-                                            <input type="hidden" id="class_id" name="class_id" value="<?= $class_id ?? '' ?>">
-                                            <input type="hidden" id="school_year" name="school_year" value="<?= $school_year ?? '' ?>">
-                                            <input type="hidden" id="quarter" name="quarter" value="<?= $quarter ?? '' ?>">
-                                            <input type="hidden" id="qa_id" name="qa_id" value="<?= $qa_id ?? '' ?>">
-                                            <input type="hidden" id="student_id" name="student_id[]" value="<?= $student_id ?? '' ?>">
-
-                                            <td></td>
-                                            <?php if ($result): ?>
-                                                <td><?php echo $q_score_total; ?></td>
-                                            <?php endif; ?>
-                                            <?php 
-                                                if ($qps_total != 0 && $assessment != 0) {
-                                                    $assessment_ps = number_format(($q_score_total / $qps_total) * 100, 2);
-                                                    $assessment_percentage = number_format($assessment / 100, 2); // Convert $written to percentage and format to 2 decimal places
-                                                    $assessment_ws = number_format($assessment_ps * $assessment_percentage, 2); // Multiply $percentage by $written percentage and format to 2 decimal places
-                                                } else {
-                                                    $assessment_ps = 0;
-                                                    $assessment_ws = 0;
-                                                }
-                                            ?>   
-                                            <td><?php echo $assessment_ps; ?></td>
-                                            <td><?php echo $assessment_ws; ?></td>
-
-                                        </tr>
-                                <?php
-                                        $no++;
+                                <td></td>
+                                <?php if ($result): ?>
+                                    <td id="qa_total_<?php echo $student_id; ?>"><?php echo $q_score_total; ?></td>
+                                <?php endif; ?>
+                                <?php 
+                                    if ($qps_total != 0 && $assessment != 0) {
+                                        $assessment_ps = number_format(($q_score_total / $qps_total) * 100, 2);
+                                        $assessment_percentage = number_format($assessment / 100, 2);
+                                        $assessment_ws = number_format($assessment_ps * $assessment_percentage, 2);
+                                    } else {
+                                        $assessment_ps = 0;
+                                        $assessment_ws = 0;
                                     }
-                                } else {
-                                    echo "<h5> No Record Found </h5>";
-                                }
-                                ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="row align-items-center px-3 py-2">
-                            <div class="col-auto">
-                                <div class="switchToggle">
-                                    <input type="checkbox" id="thirdFlexSwitchCheckDefault">
-                                    <label for="thirdFlexSwitchCheckDefault">Toggle</label>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <button id="thirdSaveChangesButton" type="submit" name="qa_score" class="btn btn-sm btn-success" style="padding: 5px 10px; display: none;" <?php if ($is_submitted) echo 'disabled'; ?>>
-                                    <i class="custom-icon bi bi-save me-2"></i> Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                <!-- End for Table for Performance Task -->
+                                ?>   
+                                <td id="qa_ps_<?php echo $student_id; ?>"><?php echo $assessment_ps; ?></td>
+                                <td id="qa_ws_<?php echo $student_id; ?>"><?php echo $assessment_ws; ?></td>
+                            </tr>
+                    <?php
+                            $no++;
+                        }
+                    } else {
+                        echo "<h5> No Record Found </h5>";
+                    }
+                    ?>
+                    </tbody>
+                </table>
             </div>
+            <div class="row align-items-center px-3 py-2">
+                <div class="col-auto">
+                    <div class="switchToggle">
+                        <input type="checkbox" id="thirdFlexSwitchCheckDefault">
+                        <label for="thirdFlexSwitchCheckDefault">Toggle</label>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <button id="thirdSaveChangesButton" type="submit" name="qa_score" class="btn btn-sm btn-success" style="padding: 5px 10px; display: none;" <?php if ($is_submitted) echo 'disabled'; ?>>
+                        <i class="custom-icon bi bi-save me-2"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 
-            <div class="tab-pane fade" id="view-class-record" role="tabpanel" aria-labelledby="view-class-record-tab">
-                <!-- Start for Table for class record -->
-                <form action="crud_subject_grade.php" method="POST">
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover table-bordered" style="width: 100%;">
-                        <thead>
-                            <tr class="text-center small" style="white-space: nowrap;">
-                                <th colspan="3"></th>
-                                <th colspan="13" class="h6 bg-primary text-white">Written Works</th>
-                                <th colspan="13" class="h6 bg-success text-white">Performance Task</th>
-                                <th colspan="3" class="h6 bg-danger text-white">Quarterly Assessment</th>
+  <div class="tab-pane fade" id="view-class-record" role="tabpanel" aria-labelledby="view-class-record-tab">
+    <!-- Start for Table for class record -->
+    <form action="crud_subject_grade.php" method="POST" id="subjectGradeForm">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover table-bordered" style="width: 100%;">
+                <thead>
+                    <tr class="text-center small" style="white-space: nowrap;">
+                        <th colspan="3"></th>
+                        <th colspan="13" class="h6 bg-primary text-white">Written Works</th>
+                        <th colspan="13" class="h6 bg-success text-white">Performance Task</th>
+                        <th colspan="3" class="h6 bg-danger text-white">Quarterly Assessment</th>
+                        <th style="width: 100px; min-width: 100px;" rowspan="3" class="h6 align-middle text-center fw-semibold">Initial<br>Grade</th>
+                        <th style="width: 100px; min-width: 100px;" rowspan="3" class="h6 align-middle text-center fw-semibold">Quarterly<br>Grade</th>
+                    </tr>
 
-                                <th style="width: 100px; min-width: 100px;" rowspan="3" class="h6 align-middle text-center fw-semibold">Initial<br>Grade</th>
-                                <th style="width: 100px; min-width: 100px;" rowspan="3" class="h6 align-middle text-center fw-semibold">Quarterly<br>Grade</th>
-                            </tr>
+                    <tr class="text-center small" style="white-space: nowrap;">
+                        <th colspan="3"></th>
+                        <td style="width: 40px; min-width: 40px;">1</td>
+                        <th style="width: 40px; min-width: 40px;">2</th>
+                        <th style="width: 40px; min-width: 40px;">3</th>
+                        <th style="width: 40px; min-width: 40px;">4</th>
+                        <th style="width: 40px; min-width: 40px;">5</th>
+                        <th style="width: 40px; min-width: 40px;">6</th>
+                        <th style="width: 40px; min-width: 40px;">7</th>
+                        <th style="width: 40px; min-width: 40px;">8</th>
+                        <th style="width: 40px; min-width: 40px;">9</th>
+                        <th style="width: 40px; min-width: 40px;">10</th>
+                        <th style="width: 40px; min-width: 40px;">Total</th>
+                        <th style="width: 40px; min-width: 40px;">PS</th>
+                        <th style="width: 40px; min-width: 40px;">WS</th>
 
-                            <tr class="text-center small" style="white-space: nowrap;">
-                                <th colspan="3"></th>
-                                <td style="width: 40px; min-width: 40px;">1</td>
-                                <th style="width: 40px; min-width: 40px;">2</th>
-                                <th style="width: 40px; min-width: 40px;">3</th>
-                                <th style="width: 40px; min-width: 40px;">4</th>
-                                <th style="width: 40px; min-width: 40px;">5</th>
-                                <th style="width: 40px; min-width: 40px;">6</th>
-                                <th style="width: 40px; min-width: 40px;">7</th>
-                                <th style="width: 40px; min-width: 40px;">8</th>
-                                <th style="width: 40px; min-width: 40px;">9</th>
-                                <th style="width: 40px; min-width: 40px;">10</th>
-                                <th style="width: 40px; min-width: 40px;">Total</th>
-                                <th style="width: 40px; min-width: 40px;">PS</th>
-                                <th style="width: 40px; min-width: 40px;">WS</th>
+                        <th style="width: 40px; min-width: 40px;">1</th>
+                        <th style="width: 40px; min-width: 40px;">2</th>
+                        <th style="width: 40px; min-width: 40px;">3</th>
+                        <th style="width: 40px; min-width: 40px;">4</th>
+                        <th style="width: 40px; min-width: 40px;">5</th>
+                        <th style="width: 40px; min-width: 40px;">6</th>
+                        <th style="width: 40px; min-width: 40px;">7</th>
+                        <th style="width: 40px; min-width: 40px;">8</th>
+                        <th style="width: 40px; min-width: 40px;">9</th>
+                        <th style="width: 40px; min-width: 40px;">10</th>
+                        <th style="width: 40px; min-width: 40px;">Total</th>
+                        <th style="width: 40px; min-width: 40px;">PS</th>
+                        <th style="width: 40px; min-width: 40px;">WS</th>
 
-                                <th style="width: 40px; min-width: 40px;">1</th>
-                                <th style="width: 40px; min-width: 40px;">2</th>
-                                <th style="width: 40px; min-width: 40px;">3</th>
-                                <th style="width: 40px; min-width: 40px;">4</th>
-                                <th style="width: 40px; min-width: 40px;">5</th>
-                                <th style="width: 40px; min-width: 40px;">6</th>
-                                <th style="width: 40px; min-width: 40px;">7</th>
-                                <th style="width: 40px; min-width: 40px;">8</th>
-                                <th style="width: 40px; min-width: 40px;">9</th>
-                                <th style="width: 40px; min-width: 40px;">10</th>
-                                <th style="width: 40px; min-width: 40px;">Total</th>
-                                <th style="width: 40px; min-width: 40px;">PS</th>
-                                <th style="width: 40px; min-width: 40px;">WS</th>
+                        <th style="width: 40px; min-width: 40px;"></th>
+                        <th style="width: 40px; min-width: 40px;">PS</th>
+                        <th style="width: 40px; min-width: 40px;">WS</th>
+                    </tr>
+                    <tr class="text-center small" style="white-space: nowrap;">
+                        <td colspan="3" class="text-end fw-semibold">Highest Possible Score</td>
+                        <?php
+                        // Get written works HPS
+                        $ww_query = "SELECT * FROM written_works WHERE load_id = '$load_id' AND school_year_id = '$school_year' AND quarter = '$quarter'";
+                        $ww_result = mysqli_query($conn, $ww_query);
+                        $ww_row = mysqli_fetch_assoc($ww_result);
+                        $total_wps = 0;
+                        
+                        if ($ww_row) {
+                            for ($i = 1; $i <= 10; $i++) {
+                                $wps_value = isset($ww_row['wps' . $i]) ? $ww_row['wps' . $i] : '';
+                                $total_wps += (int)$wps_value;
+                                echo "<td>$wps_value</td>";
+                            }
+                        } else {
+                            for ($i = 1; $i <= 10; $i++) {
+                                echo "<td></td>";
+                            }
+                        }
+                        ?>
+                        <td><?= $total_wps; ?></td>
+                        <td>100.00</td>
+                        <td><?php echo $written; ?>%</td>
 
-                                <th style="width: 40px; min-width: 40px;"></th>
-                                <th style="width: 40px; min-width: 40px;">PS</th>
-                                <th style="width: 40px; min-width: 40px;">WS</th>
-                            </tr>
-                            <tr class="text-center small" style="white-space: nowrap;">
-                                <td colspan="3" class="text-end fw-semibold">Highest Possible Score</td>
-                                <?php
-                                $no = 1;
-                                $query = "SELECT * 
-                                          FROM written_works 
-                                          WHERE load_id = '$load_id' 
-                                          AND school_year_id = '$school_year' 
-                                          AND quarter = '$quarter'";
-                                // Assuming $query_run is the result of mysqli_query() or similar
-                                $query_run = mysqli_query($conn, $query);
+                        <?php
+                        // Get performance task HPS
+                        $pt_query = "SELECT * FROM performance_task WHERE load_id = '$load_id' AND school_year_id = '$school_year' AND quarter = '$quarter'";
+                        $pt_result = mysqli_query($conn, $pt_query);
+                        $pt_row = mysqli_fetch_assoc($pt_result);
+                        $total_pps = 0;
+                        
+                        if ($pt_row) {
+                            for ($i = 1; $i <= 10; $i++) {
+                                $pps_value = isset($pt_row['pps' . $i]) ? $pt_row['pps' . $i] : '';
+                                $total_pps += (int)$pps_value;
+                                echo "<td>$pps_value</td>";
+                            }
+                        } else {
+                            for ($i = 1; $i <= 10; $i++) {
+                                echo "<td></td>";
+                            }
+                        }
+                        ?>
+                        <td><?= $total_pps; ?></td>
+                        <td>100.00</td>
+                        <td><?php echo $performance; ?>%</td>
 
-                                if (mysqli_num_rows($query_run) > 0) {
-                                    while ($row = mysqli_fetch_assoc($query_run)) {
-                                        // Compute total of wps1 to wps10
-                                        $total_wps = 0;
-                                        for ($i = 1; $i <= 10; $i++) {
-                                            // Check if the value is not empty or null before adding to the total
-                                            if (!empty($row['wps' . $i]) && $row['wps' . $i] !== null) {
-                                                $total_wps += $row['wps' . $i];
-                                            }
+                        <?php
+                        // Get quarterly assessment HPS
+                        $qa_query = "SELECT * FROM quarterly_assessment WHERE load_id = '$load_id' AND school_year_id = '$school_year' AND quarter = '$quarter'";
+                        $qa_result = mysqli_query($conn, $qa_query);
+                        $qa_row = mysqli_fetch_assoc($qa_result);
+                        $total_ps = isset($qa_row['ps']) ? $qa_row['ps'] : 0;
+                        ?>
+                        <td><?= $total_ps; ?></td>
+                        <td>100.00</td>
+                        <td><?php echo $assessment; ?>%</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="text-center small" style="white-space: nowrap;">
+                        <td class="fw-semibold">#</td>
+                        <td class="text-start fw-semibold">Sr-Code</td>
+                        <td class="text-start fw-semibold">Student Name</td>
+                        <td colspan="13"></td>
+                        <td colspan="13"></td>
+                        <td colspan="3"></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <?php
+                    $no = 1;
+                    
+                    // First, get all students in the class
+                    $students_query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.id as student_id
+                                      FROM students s 
+                                      JOIN class_students cs ON s.id = cs.student_id 
+                                      WHERE cs.class_id = '$class_id' AND cs.school_year_id = '$school_year'
+                                      ORDER BY s.lastName";
+                    
+                    $students_result = mysqli_query($conn, $students_query);
+                    
+                    if ($students_result && mysqli_num_rows($students_result) > 0) {
+                        while ($student_row = mysqli_fetch_assoc($students_result)) {
+                            $student_id = $student_row['student_id'];
+                            
+                            // Get written works scores for this student
+                            $ww_scores = array_fill(1, 10, '');
+                            $wtotal = 0;
+                            $ww_id = isset($ww_row['id']) ? $ww_row['id'] : null;
+                            
+                            if ($ww_id) {
+                                $ww_score_query = "SELECT w1, w2, w3, w4, w5, w6, w7, w8, w9, w10 
+                                                 FROM ww_score 
+                                                 WHERE student_id = '$student_id' 
+                                                 AND load_id = '$load_id' 
+                                                 AND school_year_id = '$school_year' 
+                                                 AND quarter = '$quarter' 
+                                                 AND ww_id = '$ww_id'";
+                                $ww_score_result = mysqli_query($conn, $ww_score_query);
+                                
+                                if ($ww_score_result && mysqli_num_rows($ww_score_result) > 0) {
+                                    $ww_score_row = mysqli_fetch_assoc($ww_score_result);
+                                    for ($i = 1; $i <= 10; $i++) {
+                                        $score = isset($ww_score_row['w' . $i]) ? $ww_score_row['w' . $i] : '';
+                                        $ww_scores[$i] = $score;
+                                        if (is_numeric($score)) {
+                                            $wtotal += $score;
                                         }
-                                ?>
-                                            <td><?= isset($row['wps1']) ? $row['wps1'] : ''; ?></td>
-                                            <td><?= isset($row['wps2']) ? $row['wps2'] : ''; ?></td>
-                                            <td><?= isset($row['wps3']) ? $row['wps3'] : ''; ?></td>
-                                            <td><?= isset($row['wps4']) ? $row['wps4'] : ''; ?></td>
-                                            <td><?= isset($row['wps5']) ? $row['wps5'] : ''; ?></td>
-                                            <td><?= isset($row['wps6']) ? $row['wps6'] : ''; ?></td>
-                                            <td><?= isset($row['wps7']) ? $row['wps7'] : ''; ?></td>
-                                            <td><?= isset($row['wps8']) ? $row['wps8'] : ''; ?></td>
-                                            <td><?= isset($row['wps9']) ? $row['wps9'] : ''; ?></td>
-                                            <td><?= isset($row['wps10']) ? $row['wps10'] : ''; ?></td>
-                                            <td><?= $total_wps; ?></td> 
-                                            <td>100.00</td>
-                                            <td><?php echo $written; ?>%</td>
-                                <?php 
                                     }
-                                }
-                                ?>
-
-
-                                <?php
-                                $no = 1;
-                                $query = "SELECT * 
-                                          FROM performance_task 
-                                          WHERE load_id = '$load_id' 
-                                          AND school_year_id = '$school_year' 
-                                          AND quarter = '$quarter'";
-                                // Assuming $query_run is the result of mysqli_query() or similar
-                                $query_run = mysqli_query($conn, $query);
-
-                                if (mysqli_num_rows($query_run) > 0) {
-                                    while ($row = mysqli_fetch_assoc($query_run)) {
-                                        // Compute total of wps1 to wps10
-                                        $total_pps = 0;
-                                        for ($i = 1; $i <= 10; $i++) {
-                                            // Check if the value is not empty or null before adding to the total
-                                            if (!empty($row['pps' . $i]) && $row['pps' . $i] !== null) {
-                                                $total_pps += $row['pps' . $i];
-                                            }
-                                        }
-                                ?>
-                                            <td><?= isset($row['pps1']) ? $row['pps1'] : ''; ?></td>
-                                            <td><?= isset($row['pps2']) ? $row['pps2'] : ''; ?></td>
-                                            <td><?= isset($row['pps3']) ? $row['pps3'] : ''; ?></td>
-                                            <td><?= isset($row['pps4']) ? $row['pps4'] : ''; ?></td>
-                                            <td><?= isset($row['pps5']) ? $row['pps5'] : ''; ?></td>
-                                            <td><?= isset($row['pps6']) ? $row['pps6'] : ''; ?></td>
-                                            <td><?= isset($row['pps7']) ? $row['pps7'] : ''; ?></td>
-                                            <td><?= isset($row['pps8']) ? $row['pps8'] : ''; ?></td>
-                                            <td><?= isset($row['pps9']) ? $row['pps9'] : ''; ?></td>
-                                            <td><?= isset($row['pps10']) ? $row['pps10'] : ''; ?></td>
-                                            <td><?= $total_pps; ?></td> 
-                                            <td>100.00</td>
-                                            <td><?php echo $performance; ?>%</td>
-                                <?php 
-                                    }
-                                }
-                                ?>
-                                <?php
-                                $no = 1;
-                                $query = "SELECT * 
-                                          FROM quarterly_assessment 
-                                          WHERE load_id = '$load_id' 
-                                          AND school_year_id = '$school_year' 
-                                          AND quarter = '$quarter'";
-                                // Assuming $query_run is the result of mysqli_query() or similar
-                                $query_run = mysqli_query($conn, $query);
-
-                                if (mysqli_num_rows($query_run) > 0) {
-                                    while ($row = mysqli_fetch_assoc($query_run)) {
-                                        $total_ps = $row['ps'];
-                                ?>
-                                            <td><?= isset($row['ps']) ? $row['ps'] : ''; ?></td>
-                                            <td>100.00</td>
-                                            <td><?php echo $assessment; ?>%</td>
-                                <?php 
-                                    }
-                                }
-                                ?>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="text-center small" style="white-space: nowrap;">
-                                <td class="fw-semibold">#</td>
-                                <td class="text-start fw-semibold">Sr-Code</td>
-                                <td class="text-start fw-semibold">Student Name</td>
-                                <td colspan="13"></td>
-                                <td colspan="13"></td>
-                                <td colspan="3"></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                           <?php
-                            $no = 1;
-                            $query = "SELECT DISTINCT
-                                s.sr_code,
-                                s.firstName,
-                                s.lastName,
-                                s.middleName,
-                                s.id as student_id,
-                                ww.w1, ww.w2, ww.w3, ww.w4, ww.w5, ww.w6, ww.w7, ww.w8, ww.w9, ww.w10,
-                                pt.pt1, pt.pt2, pt.pt3, pt.pt4, pt.pt5, pt.pt6, pt.pt7, pt.pt8, pt.pt9, pt.pt10,
-                                qa.score
-                            FROM 
-                                students s 
-                                JOIN class_students cs ON s.id = cs.student_id 
-                                JOIN class c ON cs.class_id = c.id
-                                JOIN loads l ON c.id = l.class_id 
-                                LEFT JOIN ww_score ww ON s.id = ww.student_id
-                                LEFT JOIN pt_score pt ON s.id = pt.student_id
-                                LEFT JOIN qa_score qa ON s.id = qa.student_id
-                            WHERE 
-                                l.class_id = '$class_id' 
-                                AND l.school_year_id = '$school_year' 
-                                AND l.class_id = '$class_id'
-                                AND ww.quarter = '$quarter'
-                                AND ww.school_year_id = '$school_year'
-                                AND ww.load_id = '$load_id'
-                                AND pt.quarter = '$quarter'
-                                AND pt.school_year_id = '$school_year'
-                                AND pt.load_id = '$load_id'
-                                AND qa.quarter = '$quarter'
-                                AND qa.school_year_id = '$school_year'
-                                AND qa.load_id = '$load_id'
-                            ORDER BY s.lastName";
-
-                            // Assuming $query_run is the result of mysqli_query() or similar
-                            $query_run = mysqli_query($conn, $query);
-
-                            if (mysqli_num_rows($query_run) > 0) {
-                                while ($row = mysqli_fetch_assoc($query_run)) {
-                                    $student_id = $row['student_id'];
-
-                                    // Compute total for w1 to w10
-                                    $wtotal = array_sum(array_map(fn($key) => $row[$key] ?? 0, array_map(fn($i) => "w$i", range(1, 10))));
-
-                                    // Compute total for pt1 to pt10
-                                    $pttotal = array_sum(array_map(fn($key) => $row[$key] ?? 0, array_map(fn($i) => "pt$i", range(1, 10))));
-                            ?>
-                                <tr class="text-center small" style="white-space: nowrap;">
-                                    <td class="text-center"><?= $no++; ?></td>
-                                    <td class="text-start"><?= isset($row['sr_code']) ? $row['sr_code'] : ''; ?></td>
-                                    <td class="text-start"><?php echo ucwords(strtolower($row['lastName'])) . ', ' . ucwords(strtolower($row['firstName'])) . ' ' . ucwords(substr($row['middleName'], 0, 1)) . '.'; ?>
-                                    <?php for ($i = 1; $i <= 10; $i++) { ?>
-                                        <td class="text-center"><?= isset($row["w$i"]) ? $row["w$i"] : ''; ?></td>
-                                    <?php } ?>
-                                    <td class="text-center"><?= $wtotal; ?></td>
-                                    <?php 
-                                        if ($total_wps != 0 && $written != 0) {
-                                            $written_ps = number_format(($wtotal / $total_wps) * 100, 2);
-                                            $written_percentage = number_format($written / 100, 2); // Convert $written to percentage and format to 2 decimal places
-                                            $written_ws = number_format($written_ps * $written_percentage, 2); // Multiply $percentage by $written percentage and format to 2 decimal places
-                                        } else {
-                                            $written_ps = 0;
-                                            $written_ws = 0;
-                                        }
-                                    ?>
-                                    <td><?php echo $written_ps; ?></td>
-                                    <td><?php echo $written_ws; ?></td>
-                                    <?php for ($i = 1; $i <= 10; $i++) { ?>
-                                        <td class="text-center"><?= isset($row["pt$i"]) ? $row["pt$i"] : ''; ?></td>
-                                    <?php } ?>
-                                    <td class="text-center"><?= $pttotal; ?></td>
-                                    <?php 
-                                        if ($total_pps != 0 && $performance != 0) {
-                                            $performance_ps = number_format(($pttotal / $total_pps) * 100, 2);
-                                            $performance_percentage = number_format($performance / 100, 2); // Convert $written to percentage and format to 2 decimal places
-                                            $performance_ws = number_format($performance_ps * $performance_percentage, 2); // Multiply $percentage by $written percentage and format to 2 decimal places
-                                        } else {
-                                            $performance_ps = 0;
-                                            $performance_ws = 0;
-                                        }
-                                    ?>
-                                    <td><?php echo $performance_ps; ?></td>
-                                    <td><?php echo $performance_ws; ?></td>
-                                    
-                                    <td class="text-center"><?= isset($row['score']) ? $row['score'] : '0'; ?></td>
-                                    <?php if(isset($row['score']) && $row['score'] !== ''): ?>
-                                    <?php 
-
-                                        if ($total_ps != 0 && $assessment != 0) {
-                                            $assessment_ps = number_format(($row['score'] / $total_ps) * 100, 2);
-                                            $assessment_percentage = number_format($assessment / 100, 2); // Convert $written to percentage and format to 2 decimal places
-                                            $assessment_ws = number_format($assessment_ps * $assessment_percentage, 2); // Multiply $percentage by $written percentage and format to 2 decimal places
-                                        } else {
-                                            $assessment_ps = 0;
-                                            $assessment_ws = 0;
-                                        }
-                                    ?>
-                                    <?php endif; ?>
-                                    <td><?php echo $assessment_ps; ?></td>
-                                    <td><?php echo $assessment_ws; ?></td>
-                                    <?php
-                                    $written_ws = $written_ws ?? 0;
-                                    $performance_ws = $performance_ws ?? 0;
-                                    $assessment_ws = $assessment_ws ?? 0;
-                                    $initial_grade = $written_ws + $performance_ws + $assessment_ws;
-                                    $formatted_initial_grade = number_format($initial_grade, 2);
-                                    ?>
-                                    <td><?php echo $formatted_initial_grade; ?></td>
-
-                                    <?php
-
-                                    // Calculate the transmuted grade
-                                    if ($formatted_initial_grade >= 100) {
-                                        $transmuted_grade = 100;
-                                    } elseif ($formatted_initial_grade >= 98.40 && $formatted_initial_grade <= 99.99) {
-                                        $transmuted_grade = 99;
-                                    } elseif ($formatted_initial_grade >= 96.80 && $formatted_initial_grade <= 98.39) {
-                                        $transmuted_grade = 98;
-                                    } elseif ($formatted_initial_grade >= 95.20 && $formatted_initial_grade <= 96.79) {
-                                        $transmuted_grade = 97;
-                                    } elseif ($formatted_initial_grade >= 93.60 && $formatted_initial_grade <= 95.19) {
-                                        $transmuted_grade = 96;
-                                    } elseif ($formatted_initial_grade >= 92.00 && $formatted_initial_grade <= 93.59) {
-                                        $transmuted_grade = 95;
-                                    } elseif ($formatted_initial_grade >= 90.40 && $formatted_initial_grade <= 91.99) {
-                                        $transmuted_grade = 94;
-                                    } elseif ($formatted_initial_grade >= 88.80 && $formatted_initial_grade <= 90.39) {
-                                        $transmuted_grade = 93;
-                                    } elseif ($formatted_initial_grade >= 87.20 && $formatted_initial_grade <= 88.79) {
-                                        $transmuted_grade = 92;
-                                    } elseif ($formatted_initial_grade >= 85.60 && $formatted_initial_grade <= 87.19) {
-                                        $transmuted_grade = 91;
-                                    } elseif ($formatted_initial_grade >= 84.00 && $formatted_initial_grade <= 85.59) {
-                                        $transmuted_grade = 90;
-                                    } elseif ($formatted_initial_grade >= 82.40 && $formatted_initial_grade <= 83.99) {
-                                        $transmuted_grade = 89;
-                                    } elseif ($formatted_initial_grade >= 80.80 && $formatted_initial_grade <= 82.39) {
-                                        $transmuted_grade = 88;
-                                    } elseif ($formatted_initial_grade >= 79.20 && $formatted_initial_grade <= 80.79) {
-                                        $transmuted_grade = 87;
-                                    } elseif ($formatted_initial_grade >= 77.60 && $formatted_initial_grade <= 79.19) {
-                                        $transmuted_grade = 86;
-                                    } elseif ($formatted_initial_grade >= 76.00 && $formatted_initial_grade <= 77.59) {
-                                        $transmuted_grade = 85;
-                                    } elseif ($formatted_initial_grade >= 74.40 && $formatted_initial_grade <= 75.99) {
-                                        $transmuted_grade = 84;
-                                    } elseif ($formatted_initial_grade >= 72.80 && $formatted_initial_grade <= 74.39) {
-                                        $transmuted_grade = 83;
-                                    } elseif ($formatted_initial_grade >= 71.20 && $formatted_initial_grade <= 72.79) {
-                                        $transmuted_grade = 82;
-                                    } elseif ($formatted_initial_grade >= 69.60 && $formatted_initial_grade <= 71.19) {
-                                        $transmuted_grade = 81;
-                                    } elseif ($formatted_initial_grade >= 68.00 && $formatted_initial_grade <= 69.59) {
-                                        $transmuted_grade = 80;
-                                    } elseif ($formatted_initial_grade >= 66.40 && $formatted_initial_grade <= 67.99) {
-                                        $transmuted_grade = 79;
-                                    } elseif ($formatted_initial_grade >= 64.80 && $formatted_initial_grade <= 66.39) {
-                                        $transmuted_grade = 78;
-                                    } elseif ($formatted_initial_grade >= 63.20 && $formatted_initial_grade <= 64.79) {
-                                        $transmuted_grade = 77;
-                                    } elseif ($formatted_initial_grade >= 61.60 && $formatted_initial_grade <= 63.19) {
-                                        $transmuted_grade = 76;
-                                    } elseif ($formatted_initial_grade >= 60.00 && $formatted_initial_grade <= 61.59) {
-                                        $transmuted_grade = 75;
-                                    } elseif ($formatted_initial_grade >= 56.00 && $formatted_initial_grade <= 59.99) {
-                                        $transmuted_grade = 74;
-                                    } elseif ($formatted_initial_grade >= 52.00 && $formatted_initial_grade <= 55.99) {
-                                        $transmuted_grade = 73;
-                                    } elseif ($formatted_initial_grade >= 48.00 && $formatted_initial_grade <= 51.99) {
-                                        $transmuted_grade = 72;
-                                    } elseif ($formatted_initial_grade >= 44.00 && $formatted_initial_grade <= 47.99) {
-                                        $transmuted_grade = 71;
-                                    } elseif ($formatted_initial_grade >= 40.00 && $formatted_initial_grade <= 43.99) {
-                                        $transmuted_grade = 70;
-                                    } elseif ($formatted_initial_grade >= 36.00 && $formatted_initial_grade <= 39.99) {
-                                        $transmuted_grade = 69;
-                                    } elseif ($formatted_initial_grade >= 32.00 && $formatted_initial_grade <= 35.99) {
-                                        $transmuted_grade = 68;
-                                    } elseif ($formatted_initial_grade >= 28.00 && $formatted_initial_grade <= 31.99) {
-                                        $transmuted_grade = 67;
-                                    } elseif ($formatted_initial_grade >= 24.00 && $formatted_initial_grade <= 27.99) {
-                                        $transmuted_grade = 66;
-                                    } elseif ($formatted_initial_grade >= 20.00 && $formatted_initial_grade <= 23.99) {
-                                        $transmuted_grade = 65;
-                                    } elseif ($formatted_initial_grade >= 16.00 && $formatted_initial_grade <= 19.99) {
-                                        $transmuted_grade = 64;
-                                    } elseif ($formatted_initial_grade >= 12.00 && $formatted_initial_grade <= 15.99) {
-                                        $transmuted_grade = 63;
-                                    } elseif ($formatted_initial_grade >= 4.00 && $formatted_initial_grade <= 7.99) {
-                                        $transmuted_grade = 62;
-                                    } elseif ($formatted_initial_grade >= 0.00 && $formatted_initial_grade <= 3.99) {
-                                        $transmuted_grade = 60;
-                                    }
-                                    ?>
-                                    <td><?php echo $transmuted_grade; ?></td>
-                                    <input type="hidden" id="load_id" name="load_id" value="<?= $load_id ?? '' ?>">
-                                    <input type="hidden" id="class_id" name="class_id" value="<?= $class_id ?? '' ?>">
-                                    <input type="hidden" id="school_year" name="school_year" value="<?= $school_year ?? '' ?>">
-                                    <input type="hidden" id="quarter" name="quarter" value="<?= $quarter ?? '' ?>">
-                                    <input type="hidden" name="transmuted_grade[<?= $student_id ?>]" value="<?= $transmuted_grade ?>">
-                                    <input type="hidden" name="student_id[]" value="<?= $student_id ?>">
-                                </tr>
-                            <?php 
                                 }
                             }
-
-                            ?>
-
-                        </tbody>
-                    </table>
-                </div>
-                    <!-- End for Table for class record -->
-                    <div class="row align-items-center px-3 py-2">
-
-
-                        <!-- HTML Button Code -->
-                        <div class="col-auto">
-                            <button type="button" 
-                                    class="btn btn-sm btn-success" 
-                                    style="padding: 5px 10px;" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#confirmSubmitModal"
-                                    <?php if ($is_submitted) echo 'disabled'; ?>> <!-- Disable button if already submitted -->
-                                <i class="bi bi-save me-2"></i> Submit Grade
-                            </button>
-                        </div>
-                        <!-- Confirmation Modal -->
-                        <div class="modal fade" id="confirmSubmitModal" tabindex="-1" aria-labelledby="confirmSubmitModalLabel" aria-hidden="true">
-                          <div class="modal-dialog">
-                            <div class="modal-content">
-                              <div class="modal-header">
-                                <h5 class="modal-title" id="confirmSubmitModalLabel">Confirm Grade Submission</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                              </div>
-                              <div class="modal-body">
-                                <p>Are you sure you want to submit the grades? The following items will no longer be editable after confirmation:</p>
-                                <ul>
-                                  <li>Written Works</li>
-                                  <li>Performance Task</li>
-                                  <li>Quarterly Assessment</li>
-                                  <li>Class Record</li>
-                                  <li>Attendance</li>
-                                  <li>Observed Values</li>
-                                </ul>
-                              </div>
-                              <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" name="update_grade" class="btn btn-success">Confirm</button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-
-
-                    </div>
-                </form>
+                            
+                            // Get performance task scores for this student
+                            $pt_scores = array_fill(1, 10, '');
+                            $pttotal = 0;
+                            $pt_id = isset($pt_row['id']) ? $pt_row['id'] : null;
+                            
+                            if ($pt_id) {
+                                $pt_score_query = "SELECT pt1, pt2, pt3, pt4, pt5, pt6, pt7, pt8, pt9, pt10 
+                                                 FROM pt_score 
+                                                 WHERE student_id = '$student_id' 
+                                                 AND load_id = '$load_id' 
+                                                 AND school_year_id = '$school_year' 
+                                                 AND quarter = '$quarter' 
+                                                 AND pt_id = '$pt_id'";
+                                $pt_score_result = mysqli_query($conn, $pt_score_query);
+                                
+                                if ($pt_score_result && mysqli_num_rows($pt_score_result) > 0) {
+                                    $pt_score_row = mysqli_fetch_assoc($pt_score_result);
+                                    for ($i = 1; $i <= 10; $i++) {
+                                        $score = isset($pt_score_row['pt' . $i]) ? $pt_score_row['pt' . $i] : '';
+                                        $pt_scores[$i] = $score;
+                                        if (is_numeric($score)) {
+                                            $pttotal += $score;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Get quarterly assessment score for this student
+                            $qa_score = '';
+                            $qa_id = isset($qa_row['id']) ? $qa_row['id'] : null;
+                            $q_score_total = 0;
+                            
+                            if ($qa_id) {
+                                $qa_score_query = "SELECT score 
+                                                 FROM qa_score 
+                                                 WHERE student_id = '$student_id' 
+                                                 AND load_id = '$load_id' 
+                                                 AND school_year_id = '$school_year' 
+                                                 AND quarter = '$quarter' 
+                                                 AND qa_id = '$qa_id'";
+                                $qa_score_result = mysqli_query($conn, $qa_score_query);
+                                
+                                if ($qa_score_result && mysqli_num_rows($qa_score_result) > 0) {
+                                    $qa_score_row = mysqli_fetch_assoc($qa_score_result);
+                                    $qa_score = isset($qa_score_row['score']) ? $qa_score_row['score'] : '';
+                                    $q_score_total = is_numeric($qa_score) ? $qa_score : 0;
+                                }
+                            }
+                            
+                            // Calculate PS and WS for Written Works
+                            $written_ps = 0;
+                            $written_ws = 0;
+                            if ($total_wps > 0 && $written > 0) {
+                                $written_ps = number_format(($wtotal / $total_wps) * 100, 2);
+                                $written_percentage = number_format($written / 100, 2);
+                                $written_ws = number_format($written_ps * $written_percentage, 2);
+                            }
+                            
+                            // Calculate PS and WS for Performance Task
+                            $performance_ps = 0;
+                            $performance_ws = 0;
+                            if ($total_pps > 0 && $performance > 0) {
+                                $performance_ps = number_format(($pttotal / $total_pps) * 100, 2);
+                                $performance_percentage = number_format($performance / 100, 2);
+                                $performance_ws = number_format($performance_ps * $performance_percentage, 2);
+                            }
+                            
+                            // Calculate PS and WS for Quarterly Assessment
+                            $assessment_ps = 0;
+                            $assessment_ws = 0;
+                            if ($total_ps > 0 && $assessment > 0) {
+                                $assessment_ps = number_format(($q_score_total / $total_ps) * 100, 2);
+                                $assessment_percentage = number_format($assessment / 100, 2);
+                                $assessment_ws = number_format($assessment_ps * $assessment_percentage, 2);
+                            }
+                            
+                            // Calculate Initial Grade and Transmuted Grade
+                            $initial_grade = $written_ws + $performance_ws + $assessment_ws;
+                            $formatted_initial_grade = number_format($initial_grade, 2);
+                            
+                            // Calculate transmuted grade
+                            $transmuted_grade = 60; // Default
+                            if ($formatted_initial_grade >= 100) {
+                                $transmuted_grade = 100;
+                            } elseif ($formatted_initial_grade >= 98.40) {
+                                $transmuted_grade = 99;
+                            } elseif ($formatted_initial_grade >= 96.80) {
+                                $transmuted_grade = 98;
+                            } elseif ($formatted_initial_grade >= 95.20) {
+                                $transmuted_grade = 97;
+                            } elseif ($formatted_initial_grade >= 93.60) {
+                                $transmuted_grade = 96;
+                            } elseif ($formatted_initial_grade >= 92.00) {
+                                $transmuted_grade = 95;
+                            } elseif ($formatted_initial_grade >= 90.40) {
+                                $transmuted_grade = 94;
+                            } elseif ($formatted_initial_grade >= 88.80) {
+                                $transmuted_grade = 93;
+                            } elseif ($formatted_initial_grade >= 87.20) {
+                                $transmuted_grade = 92;
+                            } elseif ($formatted_initial_grade >= 85.60) {
+                                $transmuted_grade = 91;
+                            } elseif ($formatted_initial_grade >= 84.00) {
+                                $transmuted_grade = 90;
+                            } elseif ($formatted_initial_grade >= 82.40) {
+                                $transmuted_grade = 89;
+                            } elseif ($formatted_initial_grade >= 80.80) {
+                                $transmuted_grade = 88;
+                            } elseif ($formatted_initial_grade >= 79.20) {
+                                $transmuted_grade = 87;
+                            } elseif ($formatted_initial_grade >= 77.60) {
+                                $transmuted_grade = 86;
+                            } elseif ($formatted_initial_grade >= 76.00) {
+                                $transmuted_grade = 85;
+                            } elseif ($formatted_initial_grade >= 74.40) {
+                                $transmuted_grade = 84;
+                            } elseif ($formatted_initial_grade >= 72.80) {
+                                $transmuted_grade = 83;
+                            } elseif ($formatted_initial_grade >= 71.20) {
+                                $transmuted_grade = 82;
+                            } elseif ($formatted_initial_grade >= 69.60) {
+                                $transmuted_grade = 81;
+                            } elseif ($formatted_initial_grade >= 68.00) {
+                                $transmuted_grade = 80;
+                            } elseif ($formatted_initial_grade >= 66.40) {
+                                $transmuted_grade = 79;
+                            } elseif ($formatted_initial_grade >= 64.80) {
+                                $transmuted_grade = 78;
+                            } elseif ($formatted_initial_grade >= 63.20) {
+                                $transmuted_grade = 77;
+                            } elseif ($formatted_initial_grade >= 61.60) {
+                                $transmuted_grade = 76;
+                            } elseif ($formatted_initial_grade >= 60.00) {
+                                $transmuted_grade = 75;
+                            } elseif ($formatted_initial_grade >= 56.00) {
+                                $transmuted_grade = 74;
+                            } elseif ($formatted_initial_grade >= 52.00) {
+                                $transmuted_grade = 73;
+                            } elseif ($formatted_initial_grade >= 48.00) {
+                                $transmuted_grade = 72;
+                            } elseif ($formatted_initial_grade >= 44.00) {
+                                $transmuted_grade = 71;
+                            } elseif ($formatted_initial_grade >= 40.00) {
+                                $transmuted_grade = 70;
+                            } elseif ($formatted_initial_grade >= 36.00) {
+                                $transmuted_grade = 69;
+                            } elseif ($formatted_initial_grade >= 32.00) {
+                                $transmuted_grade = 68;
+                            } elseif ($formatted_initial_grade >= 28.00) {
+                                $transmuted_grade = 67;
+                            } elseif ($formatted_initial_grade >= 24.00) {
+                                $transmuted_grade = 66;
+                            } elseif ($formatted_initial_grade >= 20.00) {
+                                $transmuted_grade = 65;
+                            } elseif ($formatted_initial_grade >= 16.00) {
+                                $transmuted_grade = 64;
+                            } elseif ($formatted_initial_grade >= 12.00) {
+                                $transmuted_grade = 63;
+                            } elseif ($formatted_initial_grade >= 8.00) {
+                                $transmuted_grade = 62;
+                            } elseif ($formatted_initial_grade >= 4.00) {
+                                $transmuted_grade = 61;
+                            }
+                    ?>
+                            <tr class="text-center small" style="white-space: nowrap;">
+                                <td class="text-center"><?= $no++; ?></td>
+                                <td class="text-start"><?= $student_row['sr_code']; ?></td>
+                                <td class="text-start"><?php echo ucwords(strtolower($student_row['lastName'])) . ', ' . ucwords(strtolower($student_row['firstName'])) . ' ' . ucwords(substr($student_row['middleName'], 0, 1)) . '.'; ?></td>
+                                
+                                <!-- Written Works Scores -->
+                                <?php for ($i = 1; $i <= 10; $i++) { ?>
+                                    <td class="text-center"><?= $ww_scores[$i]; ?></td>
+                                <?php } ?>
+                                <td class="text-center"><?= $wtotal; ?></td>
+                                <td><?= $written_ps; ?></td>
+                                <td><?= $written_ws; ?></td>
+                                
+                                <!-- Performance Task Scores -->
+                                <?php for ($i = 1; $i <= 10; $i++) { ?>
+                                    <td class="text-center"><?= $pt_scores[$i]; ?></td>
+                                <?php } ?>
+                                <td class="text-center"><?= $pttotal; ?></td>
+                                <td><?= $performance_ps; ?></td>
+                                <td><?= $performance_ws; ?></td>
+                                
+                                <!-- Quarterly Assessment Score -->
+                                <td class="text-center"><?= $qa_score; ?></td>
+                                <td><?= $assessment_ps; ?></td>
+                                <td><?= $assessment_ws; ?></td>
+                                
+                                <!-- Initial Grade and Transmuted Grade -->
+                                <td><?= $formatted_initial_grade; ?></td>
+                                <td><?= $transmuted_grade; ?></td>
+                                
+                                <input type="hidden" name="transmuted_grade[<?= $student_id ?>]" value="<?= $transmuted_grade ?>">
+                                <input type="hidden" name="student_id[]" value="<?= $student_id ?>">
+                            </tr>
+                    <?php
+                        }
+                    } else {
+                        echo '<tr><td colspan="31" class="text-center">No students found in this class.</td></tr>';
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Hidden inputs for form submission -->
+        <input type="hidden" id="load_id" name="load_id" value="<?= $load_id ?? '' ?>">
+        <input type="hidden" id="class_id" name="class_id" value="<?= $class_id ?? '' ?>">
+        <input type="hidden" id="school_year" name="school_year" value="<?= $school_year ?? '' ?>">
+        <input type="hidden" id="quarter" name="quarter" value="<?= $quarter ?? '' ?>">
+        
+        <div class="row align-items-center px-3 py-2">
+            <!-- HTML Button Code -->
+            <div class="col-auto">
+                <button type="button" 
+                        class="btn btn-sm btn-success" 
+                        style="padding: 5px 10px;" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#confirmSubmitModal"
+                        <?php if ($is_submitted) echo 'disabled'; ?>>
+                    <i class="bi bi-save me-2"></i> Submit Grade
+                </button>
             </div>
+        </div>
+        
+        <!-- Confirmation Modal - Moved INSIDE the form -->
+        <div class="modal fade" id="confirmSubmitModal" tabindex="-1" aria-labelledby="confirmSubmitModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmSubmitModalLabel">Confirm Grade Submission</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to submit the grades? The following items will no longer be editable after confirmation:</p>
+                        <ul>
+                            <li>Written Works</li>
+                            <li>Performance Task</li>
+                            <li>Quarterly Assessment</li>
+                            <li>Class Record</li>
+                            <li>Attendance</li>
+                            <li>Observed Values</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="update_grade" class="btn btn-success">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 
             <div class="tab-pane fade" id="quarterly-grade" role="tabpanel" aria-labelledby="quarterly-grade-tab">
                 <!-- Start for Table for quarterly grade -->
@@ -2270,7 +2313,21 @@ if ($query_run) {
                                                         // Display the input field for days present
                                                         ?>
                                                         <td>
-                                                            <input class="input" size="1" type="text" class="form-control text-center" name="days_present_<?php echo $student_id; ?>_<?php echo $month_id; ?>" value="<?php echo $daysPresent; ?>" style="text-align: center;" onkeypress="return isNumberKey(event)" oninput="checkValue(this, <?php echo $daysInMonth; ?>)"/>
+                                                            <input class="input score-input" 
+                                                                   size="1" 
+                                                                   type="text" 
+                                                                   class="form-control text-center" 
+                                                                   name="days_present_<?php echo $student_id; ?>_<?php echo $month_id; ?>" 
+                                                                   value="<?php echo $daysPresent; ?>" 
+                                                                   style="text-align: center;" 
+                                                                   onkeypress="return isNumberKey(event)" 
+                                                                   oninput="checkValue(this, <?php echo $daysInMonth; ?>)"
+                                                                   data-hps="<?php echo $daysInMonth; ?>"
+                                                                   data-student-id="<?php echo $student_id; ?>"
+                                                                   data-type="attendance"
+                                                                   data-column="<?php echo $month_id; ?>"
+                                                                   onkeydown="navigateWithArrows(event, this)"
+                                                                   maxlength="2"/>
                                                             <input type='hidden' name='class_id' value="<?php echo $class_id; ?>">
                                                             <input type='hidden' name='load_id' value="<?php echo $load_id; ?>">
                                                             <input type='hidden' name='month_id' value="<?php echo $month_id; ?>">
@@ -2386,9 +2443,6 @@ if ($query_run) {
     exit();
 }
  ?>
-<?php
-include('../assets/includes/footer.php');
-?>
 
 <script>
 // For the first set of tabs
@@ -2522,25 +2576,434 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 </script>
-<script>
-    function checkValue(input, limitValue) {
-        var enteredValue = parseInt(input.value);
-        if (!isNaN(enteredValue) && enteredValue > limitValue) {
-            // Trigger SweetAlert2 message
-            Swal.fire({
-                icon: 'warning',
-            title: 'Error!',
-            text: 'Input exceeds maximum allowable value.',
-            showConfirmButton: false,
-            timer: 1000,
-            customClass: {
-                popup: 'my-sweetalert',
-            }
-            });
 
-            input.value = '';
+<script>
+// Special function for quarterly assessment validation and update
+function validateAndUpdateQuarterly(input, maxValue, studentId) {
+    const value = parseFloat(input.value) || 0;
+    
+    if (value > maxValue && value > 0) {
+        input.classList.add('exceeded');
+        input.parentElement.classList.add('cell-exceeded');
+        
+        Swal.fire({
+            icon: 'warning',
+            title: 'Warning!',
+            text: `Score (${value}) exceeds maximum allowable value (${maxValue})`,
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } else {
+        input.classList.remove('exceeded');
+        input.parentElement.classList.remove('cell-exceeded');
+    }
+    
+    // Update quarterly calculations immediately
+    updateQuarterlyCalculations(studentId);
+}
+
+// Function to update quarterly calculations
+function updateQuarterlyCalculations(studentId) {
+    const scoreInput = document.getElementById(`qa_input_${studentId}`);
+    
+    if (!scoreInput) return;
+    
+    const score = parseFloat(scoreInput.value) || 0;
+    const hps = parseFloat(scoreInput.dataset.hps) || 0;
+    
+    // Update total score
+    const totalElement = document.getElementById(`qa_total_${studentId}`);
+    if (totalElement) {
+        totalElement.textContent = score;
+    }
+    
+    // Calculate PS
+    let ps = 0;
+    if (hps > 0) {
+        ps = (score / hps) * 100;
+    }
+    
+    // Update PS
+    const psElement = document.getElementById(`qa_ps_${studentId}`);
+    if (psElement) {
+        psElement.textContent = ps.toFixed(2);
+    }
+    
+    // Calculate WS (Weighted Score)
+    const assessmentWeight = <?php echo $assessment; ?>;
+    const ws = (ps * assessmentWeight) / 100;
+    
+    // Update WS
+    const wsElement = document.getElementById(`qa_ws_${studentId}`);
+    if (wsElement) {
+        wsElement.textContent = ws.toFixed(2);
+    }
+}
+
+// Function to calculate and update totals, PS, WS in real-time
+function updateCalculations(studentId, type) {
+    // Written Works calculations
+    if (type === 'written') {
+        let total = 0;
+        let hpsTotal = 0;
+        
+        // Calculate student's total score
+        for (let i = 1; i <= 10; i++) {
+            const scoreInput = document.getElementById(`w${i}_input_${studentId}`);
+            const hps = parseFloat(scoreInput ? scoreInput.dataset.hps : 0) || 0;
+            
+            if (scoreInput) {
+                const score = parseFloat(scoreInput.value) || 0;
+                total += score;
+                hpsTotal += hps;
+                
+                // Check if score exceeds HPS
+                if (score > hps && score > 0) {
+                    scoreInput.classList.add('exceeded');
+                    scoreInput.parentElement.classList.add('cell-exceeded');
+                } else {
+                    scoreInput.classList.remove('exceeded');
+                    scoreInput.parentElement.classList.remove('cell-exceeded');
+                }
+            }
+        }
+        
+        // Calculate PS and WS
+        const ps = hpsTotal > 0 ? ((total / hpsTotal) * 100).toFixed(2) : '0.00';
+        const writtenWeight = <?php echo $written; ?>;
+        const ws = ((parseFloat(ps) * writtenWeight) / 100).toFixed(2);
+        
+        // Update display
+        const totalElement = document.getElementById(`ww_total_${studentId}`);
+        const psElement = document.getElementById(`ww_ps_${studentId}`);
+        const wsElement = document.getElementById(`ww_ws_${studentId}`);
+        
+        if (totalElement) totalElement.textContent = total;
+        if (psElement) psElement.textContent = ps;
+        if (wsElement) wsElement.textContent = ws;
+    }
+    
+    // Performance Task calculations
+    else if (type === 'performance') {
+        let total = 0;
+        let hpsTotal = 0;
+        
+        for (let i = 1; i <= 10; i++) {
+            const scoreInput = document.getElementById(`pt${i}_input_${studentId}`);
+            const hps = parseFloat(scoreInput ? scoreInput.dataset.hps : 0) || 0;
+            
+            if (scoreInput) {
+                const score = parseFloat(scoreInput.value) || 0;
+                total += score;
+                hpsTotal += hps;
+                
+                // Check if score exceeds HPS
+                if (score > hps && score > 0) {
+                    scoreInput.classList.add('exceeded');
+                    scoreInput.parentElement.classList.add('cell-exceeded');
+                } else {
+                    scoreInput.classList.remove('exceeded');
+                    scoreInput.parentElement.classList.remove('cell-exceeded');
+                }
+            }
+        }
+        
+        // Calculate PS and WS
+        const ps = hpsTotal > 0 ? ((total / hpsTotal) * 100).toFixed(2) : '0.00';
+        const performanceWeight = <?php echo $performance; ?>;
+        const ws = ((parseFloat(ps) * performanceWeight) / 100).toFixed(2);
+        
+        // Update display
+        const totalElement = document.getElementById(`pt_total_${studentId}`);
+        const psElement = document.getElementById(`pt_ps_${studentId}`);
+        const wsElement = document.getElementById(`pt_ws_${studentId}`);
+        
+        if (totalElement) totalElement.textContent = total;
+        if (psElement) psElement.textContent = ps;
+        if (wsElement) wsElement.textContent = ws;
+    }
+    
+    // Quarterly Assessment calculations
+    else if (type === 'quarterly') {
+        updateQuarterlyCalculations(studentId);
+    }
+    
+    // Attendance calculations
+    else if (type === 'attendance') {
+        // Find all attendance inputs for this student
+        const attendanceInputs = document.querySelectorAll(`input[name^="days_present_${studentId}_"]`);
+        let totalDaysPresent = 0;
+        
+        attendanceInputs.forEach(input => {
+            const days = parseInt(input.value) || 0;
+            const hps = parseInt(input.dataset.hps) || 0;
+            totalDaysPresent += days;
+            
+            // Check if days present exceeds days in month
+            if (days > hps) {
+                input.classList.add('exceeded');
+                input.parentElement.classList.add('cell-exceeded');
+            } else {
+                input.classList.remove('exceeded');
+                input.parentElement.classList.remove('cell-exceeded');
+            }
+        });
+        
+        // Update the total days present (you might need to add an element for this)
+        const totalDaysPresentElement = document.querySelector(`td:nth-last-child(1)`);
+        if (totalDaysPresentElement) {
+            totalDaysPresentElement.textContent = totalDaysPresent;
         }
     }
+}
+
+// Function to validate input and update calculations
+function validateAndCalculate(input, maxValue, studentId, type) {
+    const value = parseFloat(input.value) || 0;
+    
+    if (value > maxValue && value > 0) {
+        input.classList.add('exceeded');
+        input.parentElement.classList.add('cell-exceeded');
+        
+        // Show warning but don't clear the value
+        Swal.fire({
+            icon: 'warning',
+            title: 'Warning!',
+            text: `Score (${value}) exceeds maximum allowable value (${maxValue})`,
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } else {
+        input.classList.remove('exceeded');
+        input.parentElement.classList.remove('cell-exceeded');
+    }
+    
+    // Update calculations
+    updateCalculations(studentId, type);
+}
+
+// Function for arrow key navigation between columns
+function navigateWithArrows(event, currentInput) {
+    // Get input properties
+    const key = event.key;
+    const studentId = currentInput.dataset.studentId;
+    const type = currentInput.dataset.type;
+    const currentColumn = parseInt(currentInput.dataset.column) || 1;
+    const totalColumns = parseInt(currentInput.dataset.totalColumns) || 10;
+    
+    // Find the current row
+    const currentRow = currentInput.closest('tr');
+    
+    if (key === 'ArrowRight' || key === 'Tab') {
+        event.preventDefault(); // Prevent default tab behavior
+        
+        // Find next input in the same row
+        let nextColumn = currentColumn + 1;
+        if (nextColumn > totalColumns) {
+            nextColumn = 1; // Loop back to first column
+        }
+        let nextInput = null;
+        if (type === 'written') {
+            nextInput = document.getElementById(`w${nextColumn}_input_${studentId}`);
+        } else if (type === 'performance') {
+            nextInput = document.getElementById(`pt${nextColumn}_input_${studentId}`);
+        } else if (type === 'quarterly') {
+            nextInput = document.getElementById(`qa_input_${studentId}`);
+        }
+        
+        if (nextInput) {
+            nextInput.focus();
+            nextInput.select();
+        }
+    } 
+    else if (key === 'ArrowLeft') {
+        event.preventDefault();
+        
+        // Find previous input in the same row
+        let prevColumn = currentColumn - 1;
+        if (prevColumn < 1) {
+            prevColumn = totalColumns; // Loop to last column
+        }
+        let prevInput = null;
+        if (type === 'written') {
+            prevInput = document.getElementById(`w${prevColumn}_input_${studentId}`);
+        } else if (type === 'performance') {
+            prevInput = document.getElementById(`pt${prevColumn}_input_${studentId}`);
+        } else if (type === 'quarterly') {
+            prevInput = document.getElementById(`qa_input_${studentId}`);
+        }
+        
+        if (prevInput) {
+            prevInput.focus();
+            prevInput.select();
+        }
+    }
+    else if (key === 'ArrowDown') {
+        event.preventDefault();
+        // Find next row that contains a student
+        let nextRow = currentRow.nextElementSibling;
+        while (nextRow && !nextRow.querySelector('input[name="student_id[]"]')) {
+            nextRow = nextRow.nextElementSibling;
+        }
+        if (nextRow) {
+            const nextSidInput = nextRow.querySelector('input[name="student_id[]"]');
+            const nextSid = nextSidInput ? nextSidInput.value : null;
+            if (nextSid) {
+                let nextInput = null;
+                if (type === 'written') {
+                    nextInput = document.getElementById(`w${currentColumn}_input_${nextSid}`);
+                } else if (type === 'performance') {
+                    nextInput = document.getElementById(`pt${currentColumn}_input_${nextSid}`);
+                } else if (type === 'quarterly') {
+                    nextInput = document.getElementById(`qa_input_${nextSid}`);
+                }
+
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                }
+            }
+        }
+    }
+    else if (key === 'ArrowUp') {
+        event.preventDefault();
+        // Find previous row that contains a student
+        let prevRow = currentRow.previousElementSibling;
+        while (prevRow && !prevRow.querySelector('input[name="student_id[]"]')) {
+            prevRow = prevRow.previousElementSibling;
+        }
+        if (prevRow) {
+            const prevSidInput = prevRow.querySelector('input[name="student_id[]"]');
+            const prevSid = prevSidInput ? prevSidInput.value : null;
+            if (prevSid) {
+                let prevInput = null;
+                if (type === 'written') {
+                    prevInput = document.getElementById(`w${currentColumn}_input_${prevSid}`);
+                } else if (type === 'performance') {
+                    prevInput = document.getElementById(`pt${currentColumn}_input_${prevSid}`);
+                } else if (type === 'quarterly') {
+                    prevInput = document.getElementById(`qa_input_${prevSid}`);
+                }
+
+                if (prevInput) {
+                    prevInput.focus();
+                    prevInput.select();
+                }
+            }
+        }
+    }
+    else if (key === 'Enter') {
+        event.preventDefault();
+        
+        // Move to next column (same behavior as ArrowRight)
+        let nextColumn = currentColumn + 1;
+        if (nextColumn > totalColumns) {
+            nextColumn = 1;
+        }
+        
+        const nextInputId = `${type === 'written' ? 'w' : type === 'performance' ? 'pt' : 'qa'}${nextColumn}_input_${studentId}`;
+        const nextInput = document.getElementById(nextInputId);
+        
+        if (nextInput) {
+            nextInput.focus();
+            nextInput.select();
+        }
+    }
+}
+
+// Function to check value and show warning
+function checkValue(input, limitValue) {
+    var enteredValue = parseInt(input.value);
+    if (!isNaN(enteredValue) && enteredValue > limitValue) {
+        // Instead of clearing, just add the exceeded class
+        input.classList.add('exceeded');
+        input.parentElement.classList.add('cell-exceeded');
+        
+        // Show warning message
+        Swal.fire({
+            icon: 'warning',
+            title: 'Warning!',
+            text: 'Score exceeds maximum allowable value',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } else {
+        input.classList.remove('exceeded');
+        input.parentElement.classList.remove('cell-exceeded');
+    }
+}
+
+// Initialize calculations on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all calculations
+    <?php
+    // Re-fetch student IDs for initialization
+    $student_query = "SELECT DISTINCT s.id as student_id
+                      FROM students s 
+                      JOIN class_students cs ON s.id = cs.student_id 
+                      JOIN class c ON cs.class_id = c.id
+                      JOIN loads l ON c.id = l.class_id 
+                      WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
+                      ORDER BY s.lastName";
+    $student_result = mysqli_query($conn, $student_query);
+    
+    while ($student_row = mysqli_fetch_assoc($student_result)) {
+        $student_id = $student_row['student_id'];
+        echo "updateCalculations('$student_id', 'written');\n";
+        echo "updateCalculations('$student_id', 'performance');\n";
+        echo "updateCalculations('$student_id', 'quarterly');\n";
+    }
+    ?>
+    
+    // Add event listeners for all score inputs
+    const scoreInputs = document.querySelectorAll('.score-input');
+    scoreInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const studentId = this.dataset.studentId;
+            const type = this.dataset.type;
+            const hps = parseFloat(this.dataset.hps) || 0;
+            const value = parseFloat(this.value) || 0;
+            
+            // Validate
+            if (value > hps && value > 0) {
+                this.classList.add('exceeded');
+                this.parentElement.classList.add('cell-exceeded');
+            } else {
+                this.classList.remove('exceeded');
+                this.parentElement.classList.remove('cell-exceeded');
+            }
+            
+            // Update calculations
+            updateCalculations(studentId, type);
+        });
+        
+        input.addEventListener('keydown', function(event) {
+            navigateWithArrows(event, this);
+        });
+    });
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        // Ctrl + S to save (if save button is visible)
+        if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+            event.preventDefault();
+            const saveButton = document.querySelector('#saveChangesButton, #customSaveChangesButton, #thirdSaveChangesButton');
+            if (saveButton && saveButton.style.display !== 'none') {
+                saveButton.click();
+            }
+        }
+        
+        // Ctrl + E to toggle edit mode
+        if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
+            event.preventDefault();
+            const toggleSwitch = document.querySelector('#flexSwitchCheckDefault, #customFlexSwitchCheckDefault, #thirdFlexSwitchCheckDefault');
+            if (toggleSwitch) {
+                toggleSwitch.click();
+            }
+        }
+    });
+});
 </script>
-
-
+<?php
+include('../assets/includes/footer.php');
+?>

@@ -448,7 +448,7 @@ mysqli_free_result($result);
                   <tbody>
                   
 <?php
-$faculty_id = isset($_GET['faculty_id']) ? $_GET['faculty_id'] : null;
+// Reuse the already-sanitized `$faculty_id` defined earlier above (if present).
 $no = 1;
 
 // Check if $newest_AY is not empty

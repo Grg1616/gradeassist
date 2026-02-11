@@ -597,10 +597,13 @@ h6 {
 /*--------------------------------------------------------------
 # Sidebar
 --------------------------------------------------------------*/
+/*--------------------------------------------------------------
+# Sidebar
+--------------------------------------------------------------*/
 .sidebar {
   position: fixed;
   top: 100px;
-  left: 0;
+  left: -300px;  /* Changed from left: 0 to left: -300px */
   bottom: 0;
   width: 300px;
   z-index: 996;
@@ -613,11 +616,12 @@ h6 {
   background-color: #fff;
 }
 
-@media (max-width: 1199px) {
+/* Remove or comment out this entire media query */
+/* @media (max-width: 1199px) {
   .sidebar {
     left: -300px;
   }
-}
+} */
 
 .sidebar::-webkit-scrollbar {
   width: 5px;
@@ -630,10 +634,9 @@ h6 {
 }
 
 @media (min-width: 1200px) {
-
   #main,
   #footer {
-    margin-left: 300px;
+    margin-left: 0;  /* Changed from margin-left: 300px to 0 */
   }
 }
 
@@ -643,18 +646,36 @@ h6 {
   }
 }
 
-@media (min-width: 1200px) {
+/* This makes the sidebar visible when toggled */
+.toggle-sidebar .sidebar {
+  left: 0;
+}
 
+@media (min-width: 1200px) {
+  .toggle-sidebar #main,
+  .toggle-sidebar #footer {
+    margin-left: 300px;  /* Add margin when sidebar is toggled open */
+  }
+}
+
+/* Remove or comment out this media query */
+/* @media (min-width: 1200px) {
   .toggle-sidebar #main,
   .toggle-sidebar #footer {
     margin-left: 0;
   }
-
+  
   .toggle-sidebar .sidebar {
     left: -300px;
   }
+} */
+ .toggle-sidebar-btn::before {
+  content: "\F479"; /* Bootstrap bi-list icon */
 }
 
+body.toggle-sidebar .toggle-sidebar-btn::before {
+  content: "\F62A"; /* Bootstrap bi-x icon when sidebar is open */
+}
 .sidebar-nav {
   padding: 0;
   margin: 0;
