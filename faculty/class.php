@@ -520,7 +520,7 @@ mysqli_free_result($result);
     <!-- List View tab content -->
    <div class="tab-pane fade show active" id="pills-list-view" role="tabpanel" aria-labelledby="pills-list-view-tab">
         <!-- Card inside List View tab -->
-        <div class="card shadow">
+        <div class="card">
             <div class="card-body">
                 <?php
                 if (!empty($school_year)) {
@@ -692,7 +692,7 @@ mysqli_free_result($result);
     <!-- Table View tab content -->
     <div class="tab-pane fade" id="pills-table-view" role="tabpanel" aria-labelledby="pills-table-view-tab">
         <!-- Card inside Table View tab -->
-        <div class="card shadow">
+        <div class="card">
             <div class="card-body">
                <?php
                if (!empty($school_year)) {

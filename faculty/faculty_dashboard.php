@@ -154,7 +154,7 @@ require '../db_conn.php';
               }
               $school_year = "class.php?school_year=$school_year";
               ?>
-            <a href="<?php echo $school_year; ?>">
+            <a href="view_subjects.php">
             <div class="card-footer">
                 <h5 class="text-primary small mb-0 d-inline">View Details</h5>
                    <i class="bi bi-arrow-right-circle text-primary float-end"></i>
@@ -200,7 +200,7 @@ require '../db_conn.php';
               }
               $school_year = "class.php?school_year=$school_year";
               ?>
-            <a href="<?php echo $school_year; ?>">
+            <a href="student_list.php">
             <div class="card-footer">
                 <h5 class="text-danger small mb-0 d-inline">View Details</h5>
                    <i class="bi bi-arrow-right-circle text-danger float-end"></i>
