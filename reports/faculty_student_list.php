@@ -34,7 +34,7 @@ $class_query = "SELECT
 $class_result = mysqli_query($conn, $class_query);
 $class = mysqli_fetch_assoc($class_result);
 
-// Fetch students in this class
+// Fetch all students in this class (we will separate by gender later)
 $students_query = "SELECT 
                     students.sr_code,
                     students.lrn,
@@ -60,7 +60,7 @@ if (!empty($class['class_start']) && !empty($class['class_end'])) {
 $class_name = 'Grade ' . $class['gradeLevel'] . ' - ' . $class['section'];
 
 // ---------------------------
-// TCPDF Setup
+// TCPDF Setup (unchanged)
 // ---------------------------
 class StudentListPDF extends TCPDF
 {
@@ -122,49 +122,93 @@ $pdf->SetFont('times', '', 10);
 $pdf->Cell(0, 6, 'Date Printed: ' . date('m/d/Y'), 0, 1, 'L');
 $pdf->Ln(8);
 
-// Table Header
-$html = '<table border="1" cellpadding="5">
-            <thead>
-                <tr style="background-color: #f2f2f2; font-weight: bold;">
-                    <th width="10%" align="center">No.</th>
-                    <th width="15%" align="center">SR Code</th>
-                    <th width="15%" align="center">LRN</th>
-                    <th width="25%" align="center">Student Name</th>
-                    <th width="20%" align="center">Email</th>
-                    <th width="15%" align="center">Contact</th>
-                </tr>
-            </thead>
-            <tbody>';
+// ---------------------------------------------------------
+// Separate students by gender
+// ---------------------------------------------------------
+$male_students   = [];
+$female_students = [];
 
-$counter = 1;
 if (mysqli_num_rows($students_result) > 0) {
+    mysqli_data_seek($students_result, 0); // reset pointer
     while ($student = mysqli_fetch_assoc($students_result)) {
+        // Normalize gender (assume stored as 'Male'/'Female' or 'M'/'F')
+        $gender = strtoupper(trim($student['gender']));
+        if ($gender == 'MALE' || $gender == 'M') {
+            $male_students[] = $student;
+        } else {
+            $female_students[] = $student;
+        }
+    }
+}
+
+// ---------------------------------------------------------
+// Helper: Build HTML table for a given set of students
+// ---------------------------------------------------------
+function buildStudentTable($students, $title, $startNumber = 1) {
+    $html = '<h3 style="font-size: 14px; font-weight: bold; margin-top: 10px;">' . $title . ' (' . count($students) . ')</h3>';
+    $html .= '<table border="1" cellpadding="5">
+                <thead>
+                    <tr style="background-color: #f2f2f2; font-weight: bold;">
+                        <th width="5%" align="center">No.</th>
+                        <th width="15%" align="center">SR Code</th>
+                        <th width="15%" align="center">LRN</th>
+                        <th width="25%" align="center">Student Name</th>
+                        <th width="25%" align="center">Email</th>
+                        <th width="15%" align="center">Contact</th>
+                    </tr>
+                </thead>
+                <tbody>';
+
+    $counter = $startNumber;
+    foreach ($students as $student) {
         // Format full name
         $middle = $student['middleName'] ? substr($student['middleName'], 0, 1) . '.' : '';
         $full_name = trim($student['lastName'] . ', ' . $student['firstName'] . ' ' . $middle);
 
         $html .= '<tr>
-                    <td width="10%" align="center">' . $counter++ . '</td>
-                    <td width="15%"align="center">' . ($student['sr_code'] ?? 'N/A') . '</td>
-                    <td width="15%"align="center">' . ($student['lrn'] ?? 'N/A') . '</td>
+                    <td width="5%" align="center">' . $counter++ . '</td>
+                    <td width="15%" align="center">' . ($student['sr_code'] ?? 'N/A') . '</td>
+                    <td width="15%" align="center">' . ($student['lrn'] ?? 'N/A') . '</td>
                     <td width="25%" align="left">' . htmlspecialchars($full_name) . '</td>
-                    <td width="20%" align="center">' . ($student['email'] ?? 'N/A') . '</td>
+                    <td width="25%" align="center">' . ($student['email'] ?? 'N/A') . '</td>
                     <td width="15%" align="center">' . ($student['contactNumber'] ?? 'N/A') . '</td>
                   </tr>';
     }
-} else {
-    $html .= '<tr><td colspan="6" align="center">No students found in this class.</td></tr>';
+
+    $html .= '</tbody></table>';
+    return $html;
 }
 
-$html .= '</tbody></table>';
+// ---------------------------------------------------------
+// Generate HTML for Male and Female tables
+// ---------------------------------------------------------
+$html = '';
 
-// Write the HTML table
+// Male table
+if (count($male_students) > 0) {
+    $html .= buildStudentTable($male_students, 'MALE STUDENTS');
+} else {
+    $html .= '<h3 style="font-size: 14px; font-weight: bold; margin-top: 10px;">MALE STUDENTS</h3>';
+    $html .= '<p>No male students found.</p>';
+}
+
+// Female table
+if (count($female_students) > 0) {
+    $html .= buildStudentTable($female_students, 'FEMALE STUDENTS');
+} else {
+    $html .= '<h3 style="font-size: 14px; font-weight: bold; margin-top: 10px;">FEMALE STUDENTS (0)</h3>';
+    $html .= '<p>No female students found.</p>';
+}
+
+// Total count line
+$total = count($male_students) + count($female_students);
+$html .= '<p style="font-size: 11px; margin-top: 10px;"><strong>Total Students:</strong> ' . $total . ' (Male: ' . count($male_students) . ', Female: ' . count($female_students) . ')</p>';
+
+// Write the HTML to PDF
 $pdf->writeHTML($html, true, false, true, false, '');
 
-
-
 // Output PDF
-$filename = "Class_List_" . str_replace([' ', '-'], '_', $class_name) . "_" . date("Ymd") . ".pdf";
+$filename = "Class_List_By_Gender_" . str_replace([' ', '-'], '_', $class_name) . "_" . date("Ymd") . ".pdf";
 $pdf->Output($filename, 'I');
 
 mysqli_close($conn);

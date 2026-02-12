@@ -42,8 +42,15 @@ $query = "SELECT DISTINCT
             students.gender
           FROM students
           JOIN class_students ON class_students.student_id = students.id
-          WHERE class_students.class_id = $class_id
-          ORDER BY students.firstName ASC, students.lastName ASC";
+                    WHERE class_students.class_id = $class_id
+                    ORDER BY
+                        CASE
+                            WHEN TRIM(LOWER(students.gender)) IN ('male','m') THEN 0
+                            WHEN TRIM(LOWER(students.gender)) IN ('female','f') THEN 1
+                            ELSE 2
+                        END,
+                        students.lastName ASC,
+                        students.firstName ASC";
 
 $query_run = mysqli_query($conn, $query);
 

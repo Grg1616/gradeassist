@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success && data.students && data.students.length > 0) {
                     data.students.forEach(student => {
                         const middle = student.middleName ? student.middleName.charAt(0) + '.' : '';
-                        const fullName = `${student.firstName} ${middle} ${student.lastName}`.trim();
+                        const fullName = `${student.lastName}, ${student.firstName} ${middle} `.trim();
                         const row = `
                             <tr>
                                 <td>${student.sr_code || 'N/A'}</td>
