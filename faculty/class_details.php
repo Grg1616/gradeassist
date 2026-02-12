@@ -285,7 +285,7 @@ if (mysqli_num_rows($result) > 0) {
       <h1>Class Details</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="faculty_dashboard.php">Home</a></li>
           <li class="breadcrumb-item"><a href="class.php">Classes</a></li>
           <li class="breadcrumb-item active">Class Details</li>
         </ol>
