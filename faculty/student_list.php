@@ -219,7 +219,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                                                     </td>
                                                     <td><?php echo htmlspecialchars($class['section']); ?></td>
                                                     <td><?php echo $class['gradeLevel']; ?></td>
-                                                    <td><?php echo $student_count; ?></td>
+                                                    <td class="text-center"><?php echo $student_count; ?></td>
                                                     <td>AY <?php echo $sy_display; ?></td>
                                                     <td class="text-center">
                                                         <button class="btn btn-sm btn-outline-secondary view-class-students"

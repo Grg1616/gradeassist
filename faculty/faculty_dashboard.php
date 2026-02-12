@@ -130,7 +130,7 @@ require '../db_conn.php';
                 <div class="col-lg-8 col mt-1">
                   <h1 class="fw-bold text-white text-end mb-0" style="color: #012970;">
                   <?php
-                  $query = "SELECT subjects.id FROM subjects 
+                  $query = "SELECT DISTINCT subjects.id FROM subjects 
                   JOIN loads ON loads.subject_id = subjects.id 
                   WHERE loads.faculty_id = {$_SESSION['user_id']} ORDER BY subjects.id";
                   $query_run = mysqli_query($conn, $query);

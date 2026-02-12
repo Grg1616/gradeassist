@@ -1,14 +1,13 @@
 -- phpMyAdmin SQL Dump
--- version 4.9.0.1
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 09, 2025 at 08:24 AM
--- Server version: 10.4.6-MariaDB
--- PHP Version: 7.3.9
+-- Generation Time: Feb 12, 2026 at 03:43 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -46,7 +45,7 @@ CREATE TABLE `academic_calendar` (
   `4quarter_end` date NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `academic_calendar`
@@ -70,7 +69,7 @@ CREATE TABLE `attendance` (
   `daysPresent` varchar(50) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `datUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `attendance`
@@ -137,7 +136,7 @@ CREATE TABLE `class` (
   `school_year_id` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `class`
@@ -160,14 +159,13 @@ CREATE TABLE `class_students` (
   `school_year_id` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `class_students`
 --
 
 INSERT INTO `class_students` (`id`, `class_id`, `student_id`, `school_year_id`, `dateCreated`, `dateUpdated`) VALUES
-(1, 1, 21, 1, '2025-03-22 14:25:35', '2025-03-22 14:25:35'),
 (4, 1, 54, 1, '2025-03-22 15:11:14', '2025-03-22 15:11:14'),
 (5, 1, 55, 1, '2025-03-22 15:11:14', '2025-03-22 15:11:14'),
 (6, 1, 56, 1, '2025-03-22 15:11:14', '2025-03-22 15:11:14'),
@@ -192,7 +190,7 @@ CREATE TABLE `faculty` (
   `status` varchar(50) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `faculty`
@@ -232,7 +230,7 @@ CREATE TABLE `filter` (
   `quarter` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `filter`
@@ -256,7 +254,7 @@ CREATE TABLE `grading_system` (
   `level` varchar(100) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `grading_system`
@@ -298,7 +296,7 @@ CREATE TABLE `loads` (
   `hours_per_week` varchar(50) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `loads`
@@ -321,7 +319,11 @@ INSERT INTO `loads` (`id`, `subject_id`, `mapeh_name`, `class_id`, `faculty_id`,
 (15, 10, 'Arts 7', 1, 7, 1, 0, '4', '2025-03-22 14:22:51', '2025-03-22 14:22:51'),
 (16, 10, 'Physical Education 7', 1, 7, 1, 0, '4', '2025-03-22 14:22:51', '2025-03-22 14:22:51'),
 (17, 10, 'Health 7', 1, 7, 1, 0, '4', '2025-03-22 14:22:51', '2025-03-22 14:22:51'),
-(18, 1, '', 1, 18, 1, 0, '3', '2025-10-03 14:11:30', '2025-10-03 14:11:45');
+(18, 1, '', 1, 18, 1, 0, '3', '2025-10-03 14:11:30', '2025-10-03 14:11:45'),
+(20, 10, 'Music 7', 1, 1, 1, 0, '4', '2026-02-11 13:36:09', '2026-02-11 13:36:09'),
+(21, 10, 'Arts 7', 1, 1, 1, 0, '4', '2026-02-11 13:36:09', '2026-02-11 13:36:09'),
+(22, 10, 'Physical Education 7', 1, 1, 1, 0, '4', '2026-02-11 13:36:09', '2026-02-11 13:36:09'),
+(23, 10, 'Health 7', 1, 1, 1, 0, '4', '2026-02-11 13:36:09', '2026-02-11 13:36:09');
 
 -- --------------------------------------------------------
 
@@ -336,7 +338,7 @@ CREATE TABLE `months` (
   `school_year_id` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `months`
@@ -371,7 +373,7 @@ CREATE TABLE `observe_values_k` (
   `school_year_id` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -392,7 +394,7 @@ CREATE TABLE `observe_values_sh` (
   `school_year_id` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `observe_values_sh`
@@ -458,7 +460,7 @@ CREATE TABLE `performance_task` (
   `quarter` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `performance_task`
@@ -466,7 +468,10 @@ CREATE TABLE `performance_task` (
 
 INSERT INTO `performance_task` (`id`, `pps1`, `pps2`, `pps3`, `pps4`, `pps5`, `pps6`, `pps7`, `pps8`, `pps9`, `pps10`, `load_id`, `school_year_id`, `quarter`, `dateCreated`, `dateUpdated`) VALUES
 (1, '50', '40', '', '', '', '', '', '', '', '', 4, 1, 1, '2025-03-22 15:19:25', '2025-03-22 15:19:56'),
-(2, '35', '', '', '', '', '', '', '', '', '', 4, 1, 2, '2025-03-22 15:24:53', '2025-03-22 15:24:53');
+(2, '35', '', '', '', '', '', '', '', '', '', 4, 1, 2, '2025-03-22 15:24:53', '2025-03-22 15:24:53'),
+(3, '10', '', '', '', '', '', '', '', '', '', 4, 1, 3, '2026-02-11 08:16:03', '2026-02-11 08:16:09'),
+(4, '10', '15', '', '', '', '', '', '', '', '', 4, 1, 4, '2026-02-11 08:57:58', '2026-02-11 09:01:05'),
+(5, '20', '', '', '', '', '', '', '', '', '', 20, 1, 1, '2026-02-12 10:40:23', '2026-02-12 10:40:23');
 
 -- --------------------------------------------------------
 
@@ -493,7 +498,7 @@ CREATE TABLE `pt_score` (
   `load_id` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `pt_score`
@@ -509,7 +514,15 @@ INSERT INTO `pt_score` (`id`, `pt1`, `pt2`, `pt3`, `pt4`, `pt5`, `pt6`, `pt7`, `
 (7, '20', '', '', '', '', '', '', '', '', '', 2, 56, 1, 2, 4, '2025-03-22 15:25:09', '2025-03-22 15:25:09'),
 (8, '15', '', '', '', '', '', '', '', '', '', 2, 55, 1, 2, 4, '2025-03-22 15:25:09', '2025-03-22 15:25:09'),
 (9, '20', '', '', '', '', '', '', '', '', '', 2, 21, 1, 2, 4, '2025-03-22 15:25:09', '2025-03-22 15:25:09'),
-(10, '25', '', '', '', '', '', '', '', '', '', 2, 54, 1, 2, 4, '2025-03-22 15:25:09', '2025-03-22 15:25:09');
+(10, '25', '', '', '', '', '', '', '', '', '', 2, 54, 1, 2, 4, '2025-03-22 15:25:09', '2025-03-22 15:25:09'),
+(11, '9', '', '', '', '', '', '', '', '', '', 3, 57, 1, 3, 4, '2026-02-11 08:16:24', '2026-02-11 08:16:24'),
+(12, '8', '', '', '', '', '', '', '', '', '', 3, 56, 1, 3, 4, '2026-02-11 08:16:24', '2026-02-11 08:16:24'),
+(13, '7', '', '', '', '', '', '', '', '', '', 3, 55, 1, 3, 4, '2026-02-11 08:16:24', '2026-02-11 08:16:24'),
+(14, '9', '', '', '', '', '', '', '', '', '', 3, 54, 1, 3, 4, '2026-02-11 08:16:24', '2026-02-11 08:16:24'),
+(15, '9', '12', '', '', '', '', '', '', '', '', 4, 57, 1, 4, 4, '2026-02-11 08:58:17', '2026-02-11 09:15:48'),
+(16, '8', '12', '', '', '', '', '', '', '', '', 4, 56, 1, 4, 4, '2026-02-11 08:58:17', '2026-02-11 09:15:48'),
+(17, '7', '13', '', '', '', '', '', '', '', '', 4, 55, 1, 4, 4, '2026-02-11 08:58:17', '2026-02-11 09:15:48'),
+(18, '5', '14', '', '', '', '', '', '', '', '', 4, 54, 1, 4, 4, '2026-02-11 08:58:17', '2026-02-11 09:15:48');
 
 -- --------------------------------------------------------
 
@@ -527,7 +540,7 @@ CREATE TABLE `qa_score` (
   `load_id` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `qa_score`
@@ -543,7 +556,19 @@ INSERT INTO `qa_score` (`id`, `score`, `qa_id`, `student_id`, `school_year_id`, 
 (7, '52', 2, 56, 1, 2, 4, '2025-03-22 15:25:32', '2025-03-22 15:25:32'),
 (8, '52', 2, 55, 1, 2, 4, '2025-03-22 15:25:32', '2025-03-22 15:25:32'),
 (9, '55', 2, 21, 1, 2, 4, '2025-03-22 15:25:32', '2025-03-22 15:25:32'),
-(10, '58', 2, 54, 1, 2, 4, '2025-03-22 15:25:32', '2025-03-22 15:25:32');
+(10, '58', 2, 54, 1, 2, 4, '2025-03-22 15:25:32', '2025-03-22 15:25:32'),
+(11, '29', 3, 57, 1, 3, 4, '2026-02-11 08:17:01', '2026-02-11 08:17:01'),
+(12, '38', 3, 56, 1, 3, 4, '2026-02-11 08:17:01', '2026-02-11 08:17:01'),
+(13, '37', 3, 55, 1, 3, 4, '2026-02-11 08:17:01', '2026-02-11 08:17:01'),
+(14, '40', 3, 54, 1, 3, 4, '2026-02-11 08:17:01', '2026-02-11 08:17:01'),
+(15, '39', 4, 57, 1, 4, 4, '2026-02-11 10:26:23', '2026-02-11 10:26:42'),
+(16, '40', 4, 56, 1, 4, 4, '2026-02-11 10:26:23', '2026-02-11 10:26:42'),
+(17, '37', 4, 55, 1, 4, 4, '2026-02-11 10:26:23', '2026-02-11 10:26:42'),
+(18, '38', 4, 54, 1, 4, 4, '2026-02-11 10:26:23', '2026-02-11 10:26:42'),
+(19, '39', 5, 57, 1, 1, 20, '2026-02-12 10:41:49', '2026-02-12 10:41:49'),
+(20, '37', 5, 56, 1, 1, 20, '2026-02-12 10:41:49', '2026-02-12 10:41:49'),
+(21, '38', 5, 55, 1, 1, 20, '2026-02-12 10:41:49', '2026-02-12 10:41:49'),
+(22, '36', 5, 54, 1, 1, 20, '2026-02-12 10:41:49', '2026-02-12 10:41:49');
 
 -- --------------------------------------------------------
 
@@ -559,7 +584,7 @@ CREATE TABLE `quarterly_assessment` (
   `quarter` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `quarterly_assessment`
@@ -567,7 +592,10 @@ CREATE TABLE `quarterly_assessment` (
 
 INSERT INTO `quarterly_assessment` (`id`, `ps`, `load_id`, `school_year_id`, `quarter`, `dateCreated`, `dateUpdated`) VALUES
 (1, '60', 4, 1, 1, '2025-03-22 15:20:46', '2025-03-22 15:20:46'),
-(2, '60', 4, 1, 2, '2025-03-22 15:25:16', '2025-03-22 15:25:16');
+(2, '60', 4, 1, 2, '2025-03-22 15:25:16', '2025-03-22 15:25:16'),
+(3, '40', 4, 1, 3, '2026-02-11 08:16:27', '2026-02-11 08:16:33'),
+(4, '40', 4, 1, 4, '2026-02-11 08:58:21', '2026-02-11 08:58:28'),
+(5, '40', 20, 1, 1, '2026-02-12 10:40:46', '2026-02-12 10:40:53');
 
 -- --------------------------------------------------------
 
@@ -588,21 +616,21 @@ CREATE TABLE `students` (
   `homeAddress` varchar(100) NOT NULL,
   `email` varchar(50) NOT NULL,
   `religion` varchar(50) NOT NULL,
-  `fatherName` varchar(50) NOT NULL,
-  `fatherOccupation` varchar(50) NOT NULL,
-  `fatherContact` varchar(50) NOT NULL,
-  `fatherEmail` varchar(50) NOT NULL,
-  `motherName` varchar(50) NOT NULL,
-  `motherOccupation` varchar(50) NOT NULL,
-  `motherContact` varchar(50) NOT NULL,
-  `motherEmail` varchar(50) NOT NULL,
-  `guardianName` varchar(50) NOT NULL,
-  `guardianOccupation` varchar(50) NOT NULL,
-  `guardianContact` varchar(50) NOT NULL,
-  `guardianEmail` varchar(50) NOT NULL,
+  `fatherName` varchar(50) DEFAULT NULL,
+  `fatherOccupation` varchar(50) DEFAULT NULL,
+  `fatherContact` varchar(50) DEFAULT NULL,
+  `fatherEmail` varchar(50) DEFAULT NULL,
+  `motherName` varchar(50) DEFAULT NULL,
+  `motherOccupation` varchar(50) DEFAULT NULL,
+  `motherContact` varchar(50) DEFAULT NULL,
+  `motherEmail` varchar(50) DEFAULT NULL,
+  `guardianName` varchar(50) DEFAULT NULL,
+  `guardianOccupation` varchar(50) DEFAULT NULL,
+  `guardianContact` varchar(50) DEFAULT NULL,
+  `guardianEmail` varchar(50) DEFAULT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `students`
@@ -612,7 +640,28 @@ INSERT INTO `students` (`id`, `sr_code`, `lrn`, `firstName`, `middleName`, `last
 (54, '2272460', 2147483647, 'Jhon Stephen', 'Mendoza', 'Villacrusis', 'Male', '2009-04-07', '9171239874', 'Nasugbu, Batangas', 'jhon.stephen@gmail.com', '', 'Catholic', 'Juan Villacrusis', 'Teacher', '9145896', 'Juan@gmail.com', '', '', '', '', '', '', '', '2025-03-22 15:10:30', '2025-03-22 15:10:30'),
 (55, '2272461', 2147483647, 'Zachary Wayne', 'Penales', 'Matsumoto', 'Male', '2008-03-15', '9184563258', 'Nasugbu, Batangas', 'wayne@gmail.com', '', 'Catholic', '', '', '', '', '', '', '', '', '', '', '', '2025-03-22 15:10:30', '2025-03-22 15:10:30'),
 (56, '2272462', 2147483647, 'Unico Renzo', 'Ruzol', 'Mallorca', 'Male', '2009-08-02', '9088112365', 'Nasugbu, Batangas', 'renzo@gmail.com', 'Cat', 'Catholic', '', '', '', '', '', '', '', '', '', '', '', '2025-03-22 15:10:30', '2025-03-22 15:12:22'),
-(57, '2272463', 2147483647, 'Mycka Julia', 'Bendicio', 'Corpuz', 'Female', '2009-07-10', '9085469632', 'Nasugbu, Batangas', 'julia@gmail.com', '', 'Catholic', '', '', '', '', '', '', '', '', '', '', '', '2025-03-22 15:10:30', '2025-03-22 15:10:30');
+(57, '2272463', 2147483647, 'Mycka Julia', 'Bendicio', 'Corpuz', 'Female', '2009-07-10', '9085469632', 'Nasugbu, Batangas', 'julia@gmail.com', '', 'Catholic', '', '', '', '', '', '', '', '', '', '', '', '2025-03-22 15:10:30', '2025-03-22 15:10:30'),
+(58, '2209352', 2147483647, 'Greg', 'Berkanes', 'Tomco', 'Male', '1970-01-01', '91287837872', 'Nasugbu Batangas', 'greg@gmail.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(59, '3000000', 2000000000, 'Juan', 'De Guzman', 'Santos', 'Male', '1970-01-01', '9123820129', 'Newtown Nasugbu Batangas', 'juan@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(60, '3000001', 2000000001, 'Mark', 'Avares', 'Reyes', 'Male', '1970-01-01', '9860799368', 'Nasugbu Batangas', 'mark@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(61, '3000002', 2000000002, 'Paul', 'Pama', 'Cruz', 'Male', '1970-01-01', '9849245865', 'Calatagan Batanagas', 'paul@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(62, '3000003', 2000000003, 'John', 'Luka', 'Garcia', 'Male', '1970-01-01', '9663038480', 'Nasugbu Batangas', 'john@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(63, '3000004', 2000000004, 'Miguel', 'Docic', 'Mendoza', 'Male', '1970-01-01', '9584587014', 'Nasugbu Batangas', 'miguel@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(64, '3000005', 2000000005, 'Carlos', 'Laporsa', 'Lopez', 'Male', '1970-01-01', '9447817354', 'Nasugbu Batangas', 'carlos@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(65, '3000006', 2000000006, 'Daniel', 'Giginto', 'Ramos', 'Male', '1970-01-01', '9576657840', 'Nasugbu Batangas', 'daniel@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(66, '3000007', 2000000007, 'Joshua', 'Bulak', 'Flores', 'Male', '1970-01-01', '9618867630', 'Nasugbu Batangas', 'joshua@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(67, '3000008', 2000000008, 'Ryan', 'Balak', 'Gonzales', 'Male', '1970-01-01', '9944946587', 'Nasugbu Batangas', 'ryan@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(68, '3000009', 2000000009, 'Anthony', 'San', 'Bautista', 'Male', '1970-01-01', '9942365700', 'Nasugbu Batangas', 'anthony@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(69, '3000010', 2000000100, 'Maria', 'Pedro', 'Santos', 'Female', '1970-01-01', '9176407520', 'Nasugbu Batangas', 'maria@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(70, '3000011', 2000000101, 'Anna', 'Diko', 'Reyes', 'Female', '1970-01-01', '9193355943', 'Nasugbu Batangas', 'anna@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(71, '3000012', 2000000102, 'Grace', 'Na', 'Cruz', 'Female', '1970-01-01', '9920132468', 'Nasugbu Batangas', 'grace@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(72, '3000013', 2000000103, 'Sophia', 'Alahm', 'Garcia', 'Female', '1970-01-01', '9510448617', 'Nasugbu Batangas', 'sophia@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(73, '3000014', 2000000104, 'Angel', 'Hehers', 'Mendoza', 'Female', '1970-01-01', '9536500143', 'Nasugbu Batangas', 'angel@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(74, '3000015', 2000000105, 'Nicole', 'Basti', 'Lopez', 'Female', '1970-01-01', '9996082389', 'Nasugbu Batangas', 'nicole@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(75, '3000016', 2000000106, 'Alyssa', 'Del Mundo', 'Ramos', 'Female', '1970-01-01', '9874829346', 'Nasugbu Batangas', 'alyssa@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(76, '3000017', 2000000107, 'Patricia', 'Gumez', 'Flores', 'Female', '1970-01-01', '9221169106', 'Nasugbu Batangas', 'patricia@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(77, '3000018', 2000000108, 'Katrina', 'Bagay', 'Gonzales', 'Female', '1970-01-01', '9332349332', 'Nasugbu Batangas', 'katrina@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(78, '3000019', 2000000109, 'Jasmine', 'Silia', 'Bautista', 'Female', '1970-01-01', '9133543893', 'Nasugbu Batangas', 'jasmine@example.com', 'Catholic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-11 09:37:46', '2026-02-11 09:37:46');
 
 -- --------------------------------------------------------
 
@@ -631,7 +680,7 @@ CREATE TABLE `subjects` (
   `contactHours` varchar(50) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `subjects`
@@ -666,18 +715,18 @@ CREATE TABLE `subject_grades` (
   `student_id` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `subject_grades`
 --
 
 INSERT INTO `subject_grades` (`id`, `q1_grade`, `q2_grade`, `q3_grade`, `q4_grade`, `load_id`, `school_year_id`, `student_id`, `dateCreated`, `dateUpdated`) VALUES
-(1, '95', '', '', '', 4, 1, 57, '2025-03-22 15:28:40', '2025-03-22 15:28:40'),
-(2, '94', '', '', '', 4, 1, 56, '2025-03-22 15:28:40', '2025-03-22 15:28:40'),
-(3, '95', '', '', '', 4, 1, 55, '2025-03-22 15:28:40', '2025-03-22 15:28:40'),
+(1, '95', '80', '91', '93', 4, 1, 57, '2025-03-22 15:28:40', '2026-02-11 10:34:38'),
+(2, '94', '79', '90', '91', 4, 1, 56, '2025-03-22 15:28:40', '2026-02-11 10:34:38'),
+(3, '95', '73', '86', '90', 4, 1, 55, '2025-03-22 15:28:40', '2026-02-11 10:34:38'),
 (4, '95', '', '', '', 4, 1, 21, '2025-03-22 15:28:40', '2025-03-22 15:28:40'),
-(5, '95', '', '', '', 4, 1, 54, '2025-03-22 15:28:40', '2025-03-22 15:28:40');
+(5, '95', '88', '95', '87', 4, 1, 54, '2025-03-22 15:28:40', '2026-02-11 10:34:38');
 
 -- --------------------------------------------------------
 
@@ -689,18 +738,21 @@ CREATE TABLE `submit_grades` (
   `id` int(11) NOT NULL,
   `load_id` int(11) NOT NULL,
   `faculty_id` int(11) NOT NULL,
-  `quarter` int(11) NOT NULL DEFAULT '1',
+  `quarter` int(11) NOT NULL,
   `status` varchar(50) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `submit_grades`
 --
 
 INSERT INTO `submit_grades` (`id`, `load_id`, `faculty_id`, `quarter`, `status`, `dateCreated`, `dateUpdated`) VALUES
-(1, 4, 1, 1, 'submit', '2025-03-22 15:28:40', '2025-03-22 15:28:40');
+(2, 4, 1, 1, 'submit', '2026-02-11 08:14:04', '2026-02-11 08:14:04'),
+(3, 4, 1, 2, 'submit', '2026-02-11 08:15:31', '2026-02-11 08:15:31'),
+(4, 4, 1, 3, 'submit', '2026-02-11 08:17:07', '2026-02-11 08:17:07'),
+(5, 4, 1, 4, 'submit', '2026-02-11 10:34:38', '2026-02-11 10:34:38');
 
 -- --------------------------------------------------------
 
@@ -720,15 +772,15 @@ CREATE TABLE `users` (
   `online_status` varchar(50) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `users`
 --
 
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `image`, `userType`, `user_id`, `status`, `online_status`, `dateCreated`, `dateUpdated`) VALUES
-(1, 'admin', '21232f297a57a5a743894a0e4a801fc3', '', '', 'admin', 0, 'enabled', 'online', '2024-06-24 15:57:18', '2025-10-08 19:21:36'),
-(42, '01594', '21232f297a57a5a743894a0e4a801fc3', 'lorenjane.balan@gmail.com', '', 'faculty', 1, 'enabled', 'online', '2025-02-20 15:17:54', '2025-10-09 11:07:27'),
+(1, 'admin', '21232f297a57a5a743894a0e4a801fc3', 'admin@gmail.com', '', 'admin', 0, 'enabled', 'offline', '2024-06-24 15:57:18', '2026-02-11 13:38:08'),
+(42, '01594', '21232f297a57a5a743894a0e4a801fc3', 'lorenjane.balan@gmail.com', '', 'faculty', 1, 'enabled', 'online', '2025-02-20 15:17:54', '2026-02-11 13:38:30'),
 (43, '01234', '21232f297a57a5a743894a0e4a801fc3', '', '', 'registrar', 2, 'enabled', 'online', '2025-02-20 15:25:41', '2025-10-09 11:05:09'),
 (44, '2272458', 'ce39108646533d11722fd039998bb653', 'maria.perez@gmail.com', '', 'student', 21, 'enabled', 'online', '2025-02-20 15:32:33', '2025-10-02 17:10:59'),
 (45, '2272458', 'b796de94c4cb2cc0f0d46f4ab06c1fd4', 'maria.perez@gmail.com', '', 'parent', 21, 'enabled', 'offline', '2025-02-20 15:32:33', '2025-02-20 15:32:33'),
@@ -819,7 +871,49 @@ INSERT INTO `users` (`id`, `username`, `password`, `email`, `image`, `userType`,
 (130, '2272462', 'c25cf58601646fc62d5bf1a652dd0026', 'renzo@gmail.com', '', 'student', 56, 'enabled', 'offline', '2025-03-22 15:10:30', '2025-03-22 15:10:30'),
 (131, '2272462', '3eeb66ac9b3cdb3d6d6b76088f7ce1fb', 'renzo@gmail.com', '', 'parent', 56, 'enabled', 'offline', '2025-03-22 15:10:30', '2025-03-22 15:10:30'),
 (132, '2272463', 'a61332aa1d8bf164eec5cab263eb40d0', 'julia@gmail.com', '', 'student', 57, 'enabled', 'offline', '2025-03-22 15:10:30', '2025-03-22 15:10:30'),
-(133, '2272463', '1326507d793eb01c4036561758e376ea', 'julia@gmail.com', '', 'parent', 57, 'enabled', 'offline', '2025-03-22 15:10:30', '2025-03-22 15:10:30');
+(133, '2272463', '1326507d793eb01c4036561758e376ea', 'julia@gmail.com', '', 'parent', 57, 'enabled', 'offline', '2025-03-22 15:10:30', '2025-03-22 15:10:30'),
+(134, '2209352', '6a36d479d82e556eab42ee304b06ffbc', 'greg@gmail.com', '', 'student', 58, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(135, '2209352', '75cfdd9c5c0fcb38b99454302f513f9f', 'greg@gmail.com', '', 'parent', 58, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(136, '3000000', '6f8362af192a136cb2c2e02d5a0af018', 'juan@example.com', '', 'student', 59, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(137, '3000000', 'badd77cfba9a22aa47016e95b701e940', 'juan@example.com', '', 'parent', 59, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(138, '3000001', 'd7ee7172d65d7d1e9e8bbf400dff1b1c', 'mark@example.com', '', 'student', 60, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(139, '3000001', 'ced3789aa51f2fb833c95fe1e901eac3', 'mark@example.com', '', 'parent', 60, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(140, '3000002', '48b43ac18ce22c5b49970902a8fefc4b', 'paul@example.com', '', 'student', 61, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(141, '3000002', '5ce1fc0916d2602f91509077ad880dad', 'paul@example.com', '', 'parent', 61, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(142, '3000003', '2017ff2bdc26d05c1e5932dfac86a93f', 'john@example.com', '', 'student', 62, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(143, '3000003', '327e53405a04f467d39265a328982395', 'john@example.com', '', 'parent', 62, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(144, '3000004', '094c7c2c09bdfdb3a9dff5fb4132f97b', 'miguel@example.com', '', 'student', 63, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(145, '3000004', '3185432336b7c074d4d3f7a1fcc2e14d', 'miguel@example.com', '', 'parent', 63, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(146, '3000005', '765d8c00c42c0a4eb0c56841baac568b', 'carlos@example.com', '', 'student', 64, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(147, '3000005', '6f7d3f3b1314c2243621e4c4e57a583a', 'carlos@example.com', '', 'parent', 64, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(148, '3000006', '0673c3a4c3b3c8c65840e025a7ca588b', 'daniel@example.com', '', 'student', 65, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(149, '3000006', '8ef6178bee02df31b367d9a33de37d46', 'daniel@example.com', '', 'parent', 65, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(150, '3000007', 'e602b030c7320bffcc269c5c3047960a', 'joshua@example.com', '', 'student', 66, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(151, '3000007', '6068d1d945bd62dfa3c02c45eaaae249', 'joshua@example.com', '', 'parent', 66, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(152, '3000008', '0dba485165dc85b9b263f5ee033b6ea7', 'ryan@example.com', '', 'student', 67, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(153, '3000008', '8fd5a9cebb99b94c9d2fcc196fe7f4ef', 'ryan@example.com', '', 'parent', 67, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(154, '3000009', 'fef85bcde34806adfa93149aaada04d5', 'anthony@example.com', '', 'student', 68, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(155, '3000009', 'ec4107813602981e3345dec65f4cfc35', 'anthony@example.com', '', 'parent', 68, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(156, '3000010', 'c74b78d178b827b2331d2a700b2e3b99', 'maria@example.com', '', 'student', 69, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(157, '3000010', '02ed613e718ac394c0f00f4366561953', 'maria@example.com', '', 'parent', 69, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(158, '3000011', '219d3200cb0b00f2859f0faa5e5e50d5', 'anna@example.com', '', 'student', 70, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(159, '3000011', 'fad9917bc4e263cf94bb7ac0388cd828', 'anna@example.com', '', 'parent', 70, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(160, '3000012', 'e5ab5e5bb8b1285516d8faf99b282f31', 'grace@example.com', '', 'student', 71, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(161, '3000012', '11595cf80d3d8b2b71e57d6c3ffda726', 'grace@example.com', '', 'parent', 71, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(162, '3000013', 'dbcd49c8175681ba1df8234706fe741a', 'sophia@example.com', '', 'student', 72, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(163, '3000013', '5652af0766dbf3bc7a6e05a959b187a8', 'sophia@example.com', '', 'parent', 72, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(164, '3000014', '3a5a042835cb520c29f2bffb4111309b', 'angel@example.com', '', 'student', 73, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(165, '3000014', 'a1f66c6a038fcd8bd164c4e3d5644b93', 'angel@example.com', '', 'parent', 73, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(166, '3000015', '778b0f00bc20ad5fa2f313a4c2830912', 'nicole@example.com', '', 'student', 74, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(167, '3000015', '2a36939c3c603d79a8ab193568ddef56', 'nicole@example.com', '', 'parent', 74, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(168, '3000016', '3a8a937b4d95bb0a21f8867a687aa500', 'alyssa@example.com', '', 'student', 75, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(169, '3000016', '3e774aba978d2f4be640b634c1a4d5ab', 'alyssa@example.com', '', 'parent', 75, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(170, '3000017', 'fba36edfe8fc1267a7106e4809f88b36', 'patricia@example.com', '', 'student', 76, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(171, '3000017', 'a5e9c1ebd2d148b18663df78346fcac1', 'patricia@example.com', '', 'parent', 76, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(172, '3000018', '23fe57fe5ae09084fc5d1b9827f86201', 'katrina@example.com', '', 'student', 77, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(173, '3000018', '0927ea6c39b40973b8d6e1b4566f1c9b', 'katrina@example.com', '', 'parent', 77, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(174, '3000019', 'fa29a8a931d1611e2ae4a2dbbeee2aa4', 'jasmine@example.com', '', 'student', 78, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46'),
+(175, '3000019', 'b2ef387f9bdc544207ceaf9ad3707427', 'jasmine@example.com', '', 'parent', 78, 'enabled', 'offline', '2026-02-11 09:37:46', '2026-02-11 09:37:46');
 
 -- --------------------------------------------------------
 
@@ -844,7 +938,7 @@ CREATE TABLE `written_works` (
   `quarter` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `written_works`
@@ -852,7 +946,10 @@ CREATE TABLE `written_works` (
 
 INSERT INTO `written_works` (`id`, `wps1`, `wps2`, `wps3`, `wps4`, `wps5`, `wps6`, `wps7`, `wps8`, `wps9`, `wps10`, `load_id`, `school_year_id`, `quarter`, `dateCreated`, `dateUpdated`) VALUES
 (1, '10', '25', '15', '', '', '', '', '', '', '', 4, 1, 1, '2025-03-22 15:16:29', '2025-03-22 15:18:37'),
-(2, '25', '', '', '', '', '', '', '', '', '', 4, 1, 2, '2025-03-22 15:24:27', '2025-03-22 15:24:27');
+(2, '25', '', '', '', '', '', '', '', '', '', 4, 1, 2, '2025-03-22 15:24:27', '2025-03-22 15:24:27'),
+(3, '10', '', '', '', '', '', '', '', '', '', 4, 1, 3, '2026-02-11 08:15:49', '2026-02-11 08:15:49'),
+(4, '10', '', '', '', '', '', '', '', '', '', 4, 1, 4, '2026-02-11 08:17:38', '2026-02-11 08:17:38'),
+(5, '10', '', '', '', '', '', '', '', '', '', 20, 1, 1, '2026-02-12 10:40:02', '2026-02-12 10:40:02');
 
 -- --------------------------------------------------------
 
@@ -879,7 +976,7 @@ CREATE TABLE `ww_score` (
   `load_id` int(11) NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT current_timestamp(),
   `dateUpdated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `ww_score`
@@ -895,7 +992,19 @@ INSERT INTO `ww_score` (`id`, `w1`, `w2`, `w3`, `w4`, `w5`, `w6`, `w7`, `w8`, `w
 (7, '20', '', '', '', '', '', '', '', '', '', 2, 56, 1, 2, 4, '2025-03-22 15:24:45', '2025-03-22 15:24:45'),
 (8, '15', '', '', '', '', '', '', '', '', '', 2, 55, 1, 2, 4, '2025-03-22 15:24:45', '2025-03-22 15:24:45'),
 (9, '20', '', '', '', '', '', '', '', '', '', 2, 21, 1, 2, 4, '2025-03-22 15:24:45', '2025-03-22 15:24:45'),
-(10, '25', '', '', '', '', '', '', '', '', '', 2, 54, 1, 2, 4, '2025-03-22 15:24:45', '2025-03-22 15:24:45');
+(10, '25', '', '', '', '', '', '', '', '', '', 2, 54, 1, 2, 4, '2025-03-22 15:24:45', '2025-03-22 15:24:45'),
+(11, '9', '', '', '', '', '', '', '', '', '', 3, 57, 1, 3, 4, '2026-02-11 08:15:56', '2026-02-11 08:15:56'),
+(12, '9', '', '', '', '', '', '', '', '', '', 3, 56, 1, 3, 4, '2026-02-11 08:15:56', '2026-02-11 08:15:56'),
+(13, '9', '', '', '', '', '', '', '', '', '', 3, 55, 1, 3, 4, '2026-02-11 08:15:56', '2026-02-11 08:15:56'),
+(14, '9', '', '', '', '', '', '', '', '', '', 3, 54, 1, 3, 4, '2026-02-11 08:15:56', '2026-02-11 08:15:56'),
+(15, '10', '', '', '', '', '', '', '', '', '', 4, 57, 1, 4, 4, '2026-02-11 09:08:53', '2026-02-11 09:08:53'),
+(16, '9', '', '', '', '', '', '', '', '', '', 4, 56, 1, 4, 4, '2026-02-11 09:08:53', '2026-02-11 09:08:53'),
+(17, '9', '', '', '', '', '', '', '', '', '', 4, 55, 1, 4, 4, '2026-02-11 09:08:53', '2026-02-11 09:08:53'),
+(18, '8', '', '', '', '', '', '', '', '', '', 4, 54, 1, 4, 4, '2026-02-11 09:08:53', '2026-02-11 09:08:53'),
+(19, '10', '', '', '', '', '', '', '', '', '', 5, 57, 1, 1, 20, '2026-02-12 10:40:14', '2026-02-12 10:40:14'),
+(20, '9', '', '', '', '', '', '', '', '', '', 5, 56, 1, 1, 20, '2026-02-12 10:40:14', '2026-02-12 10:40:14'),
+(21, '7', '', '', '', '', '', '', '', '', '', 5, 55, 1, 1, 20, '2026-02-12 10:40:14', '2026-02-12 10:40:14'),
+(22, '9', '', '', '', '', '', '', '', '', '', 5, 54, 1, 1, 20, '2026-02-12 10:40:14', '2026-02-12 10:40:14');
 
 --
 -- Indexes for dumped tables
@@ -1083,7 +1192,7 @@ ALTER TABLE `grading_system`
 -- AUTO_INCREMENT for table `loads`
 --
 ALTER TABLE `loads`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `months`
@@ -1107,31 +1216,31 @@ ALTER TABLE `observe_values_sh`
 -- AUTO_INCREMENT for table `performance_task`
 --
 ALTER TABLE `performance_task`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `pt_score`
 --
 ALTER TABLE `pt_score`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `qa_score`
 --
 ALTER TABLE `qa_score`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `quarterly_assessment`
 --
 ALTER TABLE `quarterly_assessment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
 
 --
 -- AUTO_INCREMENT for table `subjects`
@@ -1149,25 +1258,25 @@ ALTER TABLE `subject_grades`
 -- AUTO_INCREMENT for table `submit_grades`
 --
 ALTER TABLE `submit_grades`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=176;
 
 --
 -- AUTO_INCREMENT for table `written_works`
 --
 ALTER TABLE `written_works`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `ww_score`
 --
 ALTER TABLE `ww_score`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
