@@ -532,7 +532,7 @@ if(isset($school_year)) {
                     <h5 class="fw-bold text-start text-dark mb-0 mt-3 text-uppercase" style="color: #5C5C5C;"><?= $row['section'] ?: '-' ?></h5>
                 </div>
                 <div class="col-lg-4 col">
-                    <h1 class="fw-bold text-end mb-0 text-danger">
+                    <h5 class="fw-bold text-end mb-0 text-danger">
                       <?php
                       $class_id = $row['id']; // Assuming $row['id'] contains the class_id
                       $sql = "SELECT COUNT(student_id) AS total_students FROM class_students WHERE class_id = $class_id";
@@ -547,7 +547,7 @@ if(isset($school_year)) {
                           echo "0";
                       }
                       ?>
-                      </h1>
+                      </h5>
                 </div>
             </div>
             <h6 class="small text-start mb-0" style="color: <?= ($row['firstName'] && $row['middleName'] && $row['lastName']) ? 'gray' : 'white' ?>">
