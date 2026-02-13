@@ -606,10 +606,10 @@ mysqli_free_result($result);
                                 </div>
                                 <div class="card-body">
                                     <div class="row mt-2">
-                                        <div class="col-lg-8 col">
+                                        <div class="col-lg-6 col">
                                             <h6 class=" small fw-bold text-start text-dark mb-0 mt-3 text-uppercase" style="color: #5C5C5C;"><?= $row['gradeLevel'] ?: '-' ?> - <?= $row['section'] ?: '-' ?></h6>
                                         </div>
-                                        <div class="col-lg-4 col">
+                                        <div class="col-lg-6 col">
                                             <h1 class="fw-bold text-end mb-0 text-danger">
                                                 <?php
                                                 $class_id = $row['id']; // Assuming $row['id'] contains the class_id

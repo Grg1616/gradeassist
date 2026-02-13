@@ -237,7 +237,7 @@ foreach ($students as $student) {
 
                             <!-- Male Students Table -->
                             <div class="mt-4">
-                                <h6 class="fw-bold text-primary">Males</h6>
+                                <h6 class="fw-bold">Males</h6>
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-hover">
                                         <thead class="table-light">
@@ -291,7 +291,7 @@ foreach ($students as $student) {
 
                             <!-- Female Students Table -->
                             <div class="mt-5">
-                                <h6 class="fw-bold text-danger">Females</h6>
+                                <h6 class="fw-bold">Females</h6>
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-hover">
                                         <thead class="table-light">

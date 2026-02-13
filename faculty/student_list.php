@@ -21,17 +21,18 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
     <section class="section">
         <?php
         // Prepare classes query early so header can show counts and school year
-        $query = "SELECT DISTINCT 
-                    class.id, 
-                    class.section, 
-                    class.gradeLevel,
-                    class.school_year_id,
-                    sy.class_start,
-                    sy.class_end
-                  FROM class
-                  JOIN academic_calendar sy ON class.school_year_id = sy.id
-                  WHERE class.faculty_id = {$_SESSION['user_id']}
-                  ORDER BY class.gradeLevel ASC, class.section ASC";
+$query = "SELECT DISTINCT 
+            class.id, 
+            class.section, 
+            class.gradeLevel,
+            class.school_year_id,
+            sy.class_start,
+            sy.class_end
+          FROM class
+          JOIN academic_calendar sy ON class.school_year_id = sy.id
+          LEFT JOIN loads ON loads.class_id = class.id AND loads.faculty_id = {$_SESSION['user_id']}
+          WHERE class.faculty_id = {$_SESSION['user_id']} OR loads.id IS NOT NULL
+          ORDER BY class.gradeLevel ASC, class.section ASC";
 
         $query_run = mysqli_query($conn, $query);
         $classes_count = ($query_run) ? mysqli_num_rows($query_run) : 0;
@@ -129,14 +130,18 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                                 <div class="col-md-8">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                        <input type="text" id="classSearch" class="form-control" placeholder="Search classes or students...">
+                                        <input type="text" id="classSearch" class="form-control" placeholder="Search classes...">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <select id="gradeFilter" class="form-select">
                                         <option value="">All Grades</option>
                                         <?php
-                                        $gradeQuery = "SELECT DISTINCT gradeLevel FROM class WHERE faculty_id = {$_SESSION['user_id']} ORDER BY gradeLevel";
+                                        $gradeQuery = "SELECT DISTINCT class.gradeLevel 
+                                                    FROM class 
+                                                    LEFT JOIN loads ON loads.class_id = class.id AND loads.faculty_id = {$_SESSION['user_id']}
+                                                    WHERE class.faculty_id = {$_SESSION['user_id']} OR loads.id IS NOT NULL 
+                                                    ORDER BY class.gradeLevel";
                                         $gradeResult = mysqli_query($conn, $gradeQuery);
                                         while ($grade = mysqli_fetch_assoc($gradeResult)) {
                                             echo '<option value="' . $grade['gradeLevel'] . '">' . $grade['gradeLevel'] . '</option>';
@@ -270,10 +275,10 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                                     <tr>
                                         <th>SR Code</th>
                                         <th>LRN</th>
-                                        <th>Name</th>
+                                        <th>Name</th>                                       
+                                        <th>Gender</th>
                                         <th>Email</th>
                                         <th>Contact</th>
-                                        <th>Gender</th>
                                     </tr>
                                 </thead>
                                 <tbody id="modalStudentsBody">
@@ -376,9 +381,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <td>${student.sr_code || 'N/A'}</td>
                                 <td>${student.lrn || 'N/A'}</td>
                                 <td>${fullName}</td>
+                                <td>${student.gender || 'N/A'}</td>
                                 <td>${student.email || 'N/A'}</td>
                                 <td>${student.contactNumber || student.phone || 'N/A'}</td>
-                                <td>${student.gender || 'N/A'}</td>
                             </tr>
                         `;
                         modalStudentsBody.innerHTML += row;
@@ -393,33 +398,30 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // ----- Table View: Search -----
-    if (classSearch) {
-        classSearch.addEventListener('keyup', function() {
-            const searchTerm = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#classesTable tbody tr');
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
+    // ----- Table View: Combined Search + Grade filter -----
+    function applyTableFilters() {
+        const searchTerm = classSearch ? classSearch.value.toLowerCase() : '';
+        const grade = gradeFilter ? gradeFilter.value : '';
+        const rows = document.querySelectorAll('#classesTable tbody tr');
+        rows.forEach(row => {
+            // Skip empty placeholder rows (no dataset.grade)
+            const rowText = row.textContent.toLowerCase();
+            const rowGrade = row.dataset ? (row.dataset.grade || '') : '';
+            const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
+            const matchesGrade = grade === '' || rowGrade === grade;
+            row.style.display = (matchesSearch && matchesGrade) ? '' : 'none';
         });
     }
 
-    // ----- Table View: Grade filter -----
+    if (classSearch) {
+        classSearch.addEventListener('keyup', function() {
+            applyTableFilters();
+        });
+    }
+
     if (gradeFilter) {
         gradeFilter.addEventListener('change', function() {
-            const grade = this.value;
-            const rows = document.querySelectorAll('#classesTable tbody tr');
-            rows.forEach(row => {
-                if (row.style.display !== 'none') {
-                    const rowGrade = row.dataset.grade;
-                    if (grade && rowGrade !== grade) {
-                        row.style.display = 'none';
-                    } else {
-                        row.style.display = '';
-                    }
-                }
-            });
+            applyTableFilters();
         });
     }
 
