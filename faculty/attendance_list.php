@@ -271,12 +271,11 @@ foreach ($students as $student) {
                                                                    id="status_<?= $student['id'] ?>" 
                                                                    value="<?= $current_status ?>">
                                                             <button type="button" 
-                                                                class="btn btn-sm status-toggle rounded-circle 
+                                                                class="btn btn-sm status-toggle
                                                                        <?= $current_status === 'present' ? 'btn-outline-success' : 
                                                                       ($current_status === 'absent' ? 'btn-outline-danger' : 'btn-outline-secondary') ?>"
                                                                 data-student-id="<?= $student['id'] ?>"
-                                                                data-status="<?= $current_status ?>"
-                                                                style="width: 60px; height: 60px; padding: 0;"
+                                                                data-status="<?= $current_status ?>" 
                                                                 title="Current: <?= ucfirst($current_status) ?>. Click to change.">
                                                                 <?= ucfirst($current_status) ?>
                                                             </button>
@@ -325,12 +324,11 @@ foreach ($students as $student) {
                                                                    id="status_<?= $student['id'] ?>" 
                                                                    value="<?= $current_status ?>">
                                                             <button type="button" 
-                                                                class="btn btn-sm status-toggle rounded-circle 
+                                                                class="btn btn-sm status-toggle
                                                                        <?= $current_status === 'present' ? 'btn-outline-success' : 
                                                                       ($current_status === 'absent' ? 'btn-outline-danger' : 'btn-outline-secondary') ?>"
                                                                 data-student-id="<?= $student['id'] ?>"
                                                                 data-status="<?= $current_status ?>"
-                                                                style="width: 60px; height: 60px; padding: 0;"
                                                                 title="Current: <?= ucfirst($current_status) ?>. Click to change.">
                                                                 <?= ucfirst($current_status) ?>
                                                             </button>

@@ -2950,19 +2950,29 @@ function navigateWithArrows(event, currentInput) {
     }
     else if (key === 'Enter') {
         event.preventDefault();
-        
-        // Move to next column (same behavior as ArrowRight)
-        let nextColumn = currentColumn + 1;
-        if (nextColumn > totalColumns) {
-            nextColumn = 1;
+        // Same behavior as ArrowDown: move to same column next student row
+        let nextRow = currentRow.nextElementSibling;
+        while (nextRow && !nextRow.querySelector('input[name="student_id[]"]')) {
+            nextRow = nextRow.nextElementSibling;
         }
-        
-        const nextInputId = `${type === 'written' ? 'w' : type === 'performance' ? 'pt' : 'qa'}${nextColumn}_input_${studentId}`;
-        const nextInput = document.getElementById(nextInputId);
-        
-        if (nextInput) {
-            nextInput.focus();
-            nextInput.select();
+        if (nextRow) {
+            const nextSidInput = nextRow.querySelector('input[name="student_id[]"]');
+            const nextSid = nextSidInput ? nextSidInput.value : null;
+            if (nextSid) {
+                let nextInput = null;
+                if (type === 'written') {
+                    nextInput = document.getElementById(`w${currentColumn}_input_${nextSid}`);
+                } else if (type === 'performance') {
+                    nextInput = document.getElementById(`pt${currentColumn}_input_${nextSid}`);
+                } else if (type === 'quarterly') {
+                    nextInput = document.getElementById(`qa_input_${nextSid}`);
+                }
+
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                }
+            }
         }
     }
 }
@@ -3041,13 +3051,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add keyboard shortcuts
     document.addEventListener('keydown', function(event) {
         const key = (event.key || '').toString().toLowerCase();
-        // Ctrl + S to save (if save button is visible)
+        // Ctrl + S to save (if any save button is visible)
         if ((event.ctrlKey || event.metaKey) && key === 's') {
             event.preventDefault();
-            const saveButton = document.querySelector('#saveChangesButton, #customSaveChangesButton, #thirdSaveChangesButton');
-            // Use offsetParent to determine visibility and ensure button is enabled
-            if (saveButton && !saveButton.disabled && saveButton.offsetParent !== null) {
-                saveButton.click();
+            const saveButtons = Array.from(document.querySelectorAll('#saveChangesButton, #customSaveChangesButton, #thirdSaveChangesButton'));
+            for (const btn of saveButtons) {
+                if (btn && !btn.disabled && btn.offsetParent !== null) {
+                    btn.click();
+                    break;
+                }
             }
         }
 
