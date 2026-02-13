@@ -1012,20 +1012,32 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                                 <?php
                                 $no = 1;
 
-                                $query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.id as student_id
-                                          FROM students s 
-                                          JOIN class_students cs ON s.id = cs.student_id 
-                                          JOIN class c ON cs.class_id = c.id
-                                          JOIN loads l ON c.id = l.class_id 
-                                          WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
-                                          ORDER BY s.lastName";
+                                                                $query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.gender, s.id as student_id
+                                                                                    FROM students s 
+                                                                                    JOIN class_students cs ON s.id = cs.student_id 
+                                                                                    JOIN class c ON cs.class_id = c.id
+                                                                                    JOIN loads l ON c.id = l.class_id 
+                                                                                    WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
+                                                                                    ORDER BY 
+                                                                                        CASE WHEN TRIM(LOWER(s.gender)) IN ('male','m') THEN 0 
+                                                                                                 WHEN TRIM(LOWER(s.gender)) IN ('female','f') THEN 1 
+                                                                                                 ELSE 2 END, s.lastName";
 
 
                                 $query_run = mysqli_query($conn, $query);
 
                                 if ($query_run) {
+                                    $currentGenderGroup = null;
                                     while ($row = mysqli_fetch_assoc($query_run)) {
                                         $student_id = $row['student_id'];
+                                        $gender = isset($row['gender']) ? strtolower(trim($row['gender'])) : '';
+                                        $genderGroup = (in_array($gender, ['male','m']) ? 'male' : (in_array($gender, ['female','f']) ? 'female' : 'other'));
+                                        if ($genderGroup !== $currentGenderGroup) {
+                                            // print group header row
+                                            $label = ($genderGroup === 'male') ? 'Male' : (($genderGroup === 'female') ? 'Female' : 'Other / Unspecified');
+                                            echo "<tr class=\"table  small text-start\"><td colspan=\"3\"><strong>" . htmlspecialchars($label) . "</strong></td></tr>";
+                                            $currentGenderGroup = $genderGroup;
+                                        }
                                 ?>
                                         <tr class="text-center small" style="white-space: nowrap;">
                                             <td class=""><?php echo $no; ?></td>
@@ -1241,19 +1253,30 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                                 <?php
                                 $no = 1;
 
-                                $query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.id as student_id
-                                            FROM students s 
-                                            JOIN class_students cs ON s.id = cs.student_id 
-                                            JOIN class c ON cs.class_id = c.id
-                                            JOIN loads l ON c.id = l.class_id 
-                                            WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
-                                            ORDER BY s.lastName";
+                                                                $query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.gender, s.id as student_id
+                                                                                        FROM students s 
+                                                                                        JOIN class_students cs ON s.id = cs.student_id 
+                                                                                        JOIN class c ON cs.class_id = c.id
+                                                                                        JOIN loads l ON c.id = l.class_id 
+                                                                                        WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
+                                                                                        ORDER BY 
+                                                                                            CASE WHEN TRIM(LOWER(s.gender)) IN ('male','m') THEN 0 
+                                                                                                     WHEN TRIM(LOWER(s.gender)) IN ('female','f') THEN 1 
+                                                                                                     ELSE 2 END, s.lastName";
 
                                 $query_run = mysqli_query($conn, $query);
 
                                 if ($query_run) {
+                                    $currentGenderGroup = null;
                                     while ($row = mysqli_fetch_assoc($query_run)) {
                                         $student_id = $row['student_id'];
+                                        $gender = isset($row['gender']) ? strtolower(trim($row['gender'])) : '';
+                                        $genderGroup = (in_array($gender, ['male','m']) ? 'male' : (in_array($gender, ['female','f']) ? 'female' : 'other'));
+                                        if ($genderGroup !== $currentGenderGroup) {
+                                            $label = ($genderGroup === 'male') ? 'Male' : (($genderGroup === 'female') ? 'Female' : 'Other / Unspecified');
+                                            echo "<tr class=\"table small text-start\"><td colspan=\"3\"><strong>" . htmlspecialchars($label) . "</strong></td></tr>";
+                                            $currentGenderGroup = $genderGroup;
+                                        }
                                 ?>
                                         <tr class="text-center small" style="white-space: nowrap;">
                                             <td class=""><?php echo $no; ?></td>
@@ -1455,19 +1478,30 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                     </tr>
                     <?php
                     $no = 1;
-                    $query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.id as student_id
-                                FROM students s 
-                                JOIN class_students cs ON s.id = cs.student_id 
-                                JOIN class c ON cs.class_id = c.id
-                                JOIN loads l ON c.id = l.class_id 
-                                WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
-                                ORDER BY s.lastName";
+                                                                $query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.gender, s.id as student_id
+                                                                                        FROM students s 
+                                                                                        JOIN class_students cs ON s.id = cs.student_id 
+                                                                                        JOIN class c ON cs.class_id = c.id
+                                                                                        JOIN loads l ON c.id = l.class_id 
+                                                                                        WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
+                                                                                        ORDER BY 
+                                                                                            CASE WHEN TRIM(LOWER(s.gender)) IN ('male','m') THEN 0 
+                                                                                                     WHEN TRIM(LOWER(s.gender)) IN ('female','f') THEN 1 
+                                                                                                     ELSE 2 END, s.lastName";
 
                     $query_run = mysqli_query($conn, $query);
 
-                    if ($query_run) {
-                        while ($row = mysqli_fetch_assoc($query_run)) {
-                            $student_id = $row['student_id'];
+                                if ($query_run) {
+                                    $currentGenderGroup = null;
+                                    while ($row = mysqli_fetch_assoc($query_run)) {
+                                        $student_id = $row['student_id'];
+                                        $gender = isset($row['gender']) ? strtolower(trim($row['gender'])) : '';
+                                        $genderGroup = (in_array($gender, ['male','m']) ? 'male' : (in_array($gender, ['female','f']) ? 'female' : 'other'));
+                                        if ($genderGroup !== $currentGenderGroup) {
+                                            $label = ($genderGroup === 'male') ? 'Male' : (($genderGroup === 'female') ? 'Female' : 'Other / Unspecified');
+                                            echo "<tr class=\"table small text-start\"><td colspan=\"3\"><strong>" . htmlspecialchars($label) . "</strong></td></tr>";
+                                            $currentGenderGroup = $genderGroup;
+                                        }
                     ?>
                             <tr class="text-center small" style="white-space: nowrap;">
                                 <td class=""><?php echo $no; ?></td>
@@ -1713,17 +1747,28 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                     $no = 1;
                     
                     // First, get all students in the class
-                    $students_query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.id as student_id
-                                      FROM students s 
-                                      JOIN class_students cs ON s.id = cs.student_id 
-                                      WHERE cs.class_id = '$class_id' AND cs.school_year_id = '$school_year'
-                                      ORDER BY s.lastName";
+                                        $students_query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.gender, s.id as student_id
+                                                                            FROM students s 
+                                                                            JOIN class_students cs ON s.id = cs.student_id 
+                                                                            WHERE cs.class_id = '$class_id' AND cs.school_year_id = '$school_year'
+                                                                            ORDER BY 
+                                                                                CASE WHEN TRIM(LOWER(s.gender)) IN ('male','m') THEN 0 
+                                                                                         WHEN TRIM(LOWER(s.gender)) IN ('female','f') THEN 1 
+                                                                                         ELSE 2 END, s.lastName";
                     
                     $students_result = mysqli_query($conn, $students_query);
                     
                     if ($students_result && mysqli_num_rows($students_result) > 0) {
+                        $currentGenderGroup = null;
                         while ($student_row = mysqli_fetch_assoc($students_result)) {
                             $student_id = $student_row['student_id'];
+                            $gender = isset($student_row['gender']) ? strtolower(trim($student_row['gender'])) : '';
+                            $genderGroup = (in_array($gender, ['male','m']) ? 'male' : (in_array($gender, ['female','f']) ? 'female' : 'other'));
+                            if ($genderGroup !== $currentGenderGroup) {
+                                $label = ($genderGroup === 'male') ? 'Male' : (($genderGroup === 'female') ? 'Female' : 'Other / Unspecified');
+                                echo "<tr class=\"table small text-start\"><td colspan=\"3\"><strong>" . htmlspecialchars($label) . "</strong></td></tr>";
+                                $currentGenderGroup = $genderGroup;
+                            }
                             
                             // Get written works scores for this student
                             $ww_scores = array_fill(1, 10, '');
@@ -2028,18 +2073,29 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                         <tbody>
 <?php
 $no = 1;
-$query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.id as student_id, c.gradeLevel
-          FROM students s 
-          JOIN class_students cs ON s.id = cs.student_id 
-          JOIN class c ON cs.class_id = c.id
-          JOIN loads l ON c.id = l.class_id 
-          WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
-          ORDER BY s.lastName";
+$query = "SELECT DISTINCT s.sr_code, s.firstName, s.lastName, s.middleName, s.gender, s.id as student_id, c.gradeLevel
+                    FROM students s 
+                    JOIN class_students cs ON s.id = cs.student_id 
+                    JOIN class c ON cs.class_id = c.id
+                    JOIN loads l ON c.id = l.class_id 
+                    WHERE l.class_id = '$class_id' AND l.school_year_id = '$school_year'
+                    ORDER BY 
+                        CASE WHEN TRIM(LOWER(s.gender)) IN ('male','m') THEN 0 
+                                 WHEN TRIM(LOWER(s.gender)) IN ('female','f') THEN 1 
+                                 ELSE 2 END, s.lastName";
 $query_run = mysqli_query($conn, $query);
 if ($query_run) {
+    $currentGenderGroup = null;
     while ($row = mysqli_fetch_assoc($query_run)) {
         $student_id = $row['student_id'];
         $gradeLevel = $row['gradeLevel'];
+        $gender = isset($row['gender']) ? strtolower(trim($row['gender'])) : '';
+        $genderGroup = (in_array($gender, ['male','m']) ? 'male' : (in_array($gender, ['female','f']) ? 'female' : 'other'));
+        if ($genderGroup !== $currentGenderGroup) {
+            $label = ($genderGroup === 'male') ? 'Male' : (($genderGroup === 'female') ? 'Female' : 'Other / Unspecified');
+            echo "<tr class=\"table-secondary small text-start\"><td colspan=\"3\"><strong>" . htmlspecialchars($label) . "</strong></td></tr>";
+            $currentGenderGroup = $genderGroup;
+        }
         $finalGrade = "N/A"; // Initialize final grade with a default value
 ?>
 
@@ -2984,17 +3040,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add keyboard shortcuts
     document.addEventListener('keydown', function(event) {
+        const key = (event.key || '').toString().toLowerCase();
         // Ctrl + S to save (if save button is visible)
-        if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        if ((event.ctrlKey || event.metaKey) && key === 's') {
             event.preventDefault();
             const saveButton = document.querySelector('#saveChangesButton, #customSaveChangesButton, #thirdSaveChangesButton');
-            if (saveButton && saveButton.style.display !== 'none') {
+            // Use offsetParent to determine visibility and ensure button is enabled
+            if (saveButton && !saveButton.disabled && saveButton.offsetParent !== null) {
                 saveButton.click();
             }
         }
-        
+
         // Ctrl + E to toggle edit mode
-        if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
+        if ((event.ctrlKey || event.metaKey) && key === 'e') {
             event.preventDefault();
             const toggleSwitch = document.querySelector('#flexSwitchCheckDefault, #customFlexSwitchCheckDefault, #thirdFlexSwitchCheckDefault');
             if (toggleSwitch) {

@@ -202,7 +202,7 @@ if (isset($_SESSION['id'])) {
 
                   ?>
                   <div class="row">
-                      <div class="col-lg-3 col-md-4 label">Employee Number</div>
+                      <div class="col-lg-3 col-md-4 label">Employee No.</div>
                       <div class="col-lg-9 col-md-8"><?php echo isset($data['emp_number']) ? $data['emp_number'] : ""; ?></div>
                   </div>
 
