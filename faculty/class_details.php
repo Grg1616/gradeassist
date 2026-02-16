@@ -50,8 +50,8 @@ require '../db_conn.php';
 .switchToggle label {
     cursor: pointer;
     text-indent: -9999px;
-    width: 120px; /* Adjusted width for better visibility */
-    max-width: 120px; /* Adjusted max-width */
+    width: 50px;
+    max-width: 50px;
     height: 30px;
     background: #6c757d;
     display: block;
@@ -76,34 +76,6 @@ require '../db_conn.php';
     background: #0d6efd;
 }
 
-.switchToggle input + label:before,
-.switchToggle input + input + label:before {
-    content: 'Edit';
-    position: absolute;
-    top: 3px;
-    left: 35px;
-    width: 100px;
-    height: 26px;                      
-    border-radius: 90px;
-    transition: 0.3s;
-    text-indent: 0;
-    color: #fff;
-}
-
-.switchToggle input:checked + label:before,
-.switchToggle input:checked + input + label:before {
-    content: 'Editable';
-    position: absolute;
-    top: 3px;
-    left: 10px;
-    width: 100px;
-    height: 26px;
-    border-radius: 90px;
-    transition: 0.3s;
-    text-indent: 0;
-    color: #fff;
-}
-
 .switchToggle input:checked + label:after,
 .switchToggle input:checked + input + label:after {
     left: calc(100% - 2px);
@@ -112,6 +84,18 @@ require '../db_conn.php';
 
 .switchToggle label:active:after {
     width: 60px;
+}
+
+.toggle-label {
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.toggle-label.active {
+    color: #0d6efd;
+    font-weight: bold;
 }
 
 .toggle-switchArea {
@@ -1146,9 +1130,12 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                      </div>
                 <div class="row align-items-center px-3 py-2">
                     <div class="col-auto">
-                        <div class="switchToggle">
-                            <input type="checkbox" id="flexSwitchCheckDefault">
-                            <label for="flexSwitchCheckDefault">Toggle</label>
+                        <div class="toggle-wrapper">
+                            <div class="switchToggle">
+                                <input type="checkbox" id="flexSwitchCheckDefault">
+                                <label for="flexSwitchCheckDefault"></label>
+                            </div>
+                            <div class="toggle-label" id="toggleLabel"></div>
                         </div>
                     </div>
                     <div class="col-auto">
@@ -1384,9 +1371,12 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                     </div>
                     <div class="row align-items-center px-3 py-2">
                             <div class="col-auto">
-                                <div class="switchToggle">
-                                    <input type="checkbox" id="customFlexSwitchCheckDefault">
-                                    <label for="customFlexSwitchCheckDefault">Toggle</label>
+                                <div class="toggle-wrapper">
+                                    <div class="switchToggle">
+                                        <input type="checkbox" id="customFlexSwitchCheckDefault">
+                                        <label for="customFlexSwitchCheckDefault"></label>
+                                    </div>
+                                    <div class="toggle-label" id="customToggleLabel"></div>
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -1609,9 +1599,12 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
             </div>
             <div class="row align-items-center px-3 py-2">
                 <div class="col-auto">
-                    <div class="switchToggle">
-                        <input type="checkbox" id="thirdFlexSwitchCheckDefault">
-                        <label for="thirdFlexSwitchCheckDefault">Toggle</label>
+                    <div class="toggle-wrapper">
+                        <div class="switchToggle">
+                            <input type="checkbox" id="thirdFlexSwitchCheckDefault">
+                            <label for="thirdFlexSwitchCheckDefault"></label>
+                        </div>
+                        <div class="toggle-label" id="thirdToggleLabel"></div>
                     </div>
                 </div>
                 <div class="col-auto">
@@ -2582,6 +2575,11 @@ document.addEventListener("DOMContentLoaded", function() {
             var inputs = document.querySelectorAll('.' + editableClass);
             var saveButton = document.getElementById(saveButtonId);
             
+            // Determine toggle label ID based on switch ID
+            var toggleLabelId = switchId.replace('Check', 'Check') === 'flexSwitchCheckDefault' ? 'toggleLabel' : 
+                                switchId === 'customFlexSwitchCheckDefault' ? 'customToggleLabel' : 'thirdToggleLabel';
+            var toggleLabel = document.getElementById(toggleLabelId);
+            
             if (switchState === 'true') {
                 switchElement.checked = true;
                 toggleEditable(true); // Enable editable mode if switch is checked
@@ -2601,6 +2599,16 @@ document.addEventListener("DOMContentLoaded", function() {
                         spans[i].style.display = 'inline-block';
                         inputs[i].style.display = 'none';
                         saveButton.style.display = 'none'; // Hide the button
+                    }
+                }
+                // Update toggle label
+                if (toggleLabel) {
+                    if (editable) {
+                        toggleLabel.textContent = '*editable';
+                        toggleLabel.classList.add('active');
+                    } else {
+                        toggleLabel.textContent = '';
+                        toggleLabel.classList.remove('active');
                     }
                 }
             }
