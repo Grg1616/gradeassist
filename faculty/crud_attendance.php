@@ -1,6 +1,7 @@
 <?php
 session_start();
-if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['userType']) && in_array($_SESSION['userType'], ['principal', 'chairperson', 'registrar', 'faculty'])) {
+// Only faculty members (advisers) should access attendance
+if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['userType']) && $_SESSION['userType'] === 'faculty') {
 
     require '../db_conn.php';
 
@@ -46,7 +47,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
         exit();
     }
 } else {
-    header("Location: ../admin_login.php");
+    header("Location: ../faculty-portal.php");
     exit();
 }
 ?>

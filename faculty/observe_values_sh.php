@@ -185,7 +185,12 @@
                                                         <td class="text-start"><?php echo $item['behavior_statement']; ?></td>
                                                         <?php for ($ovquarter = 1; $ovquarter <= 4; $ovquarter++) : ?>
                                                             <td class="text-left">
-                                                                <input class="input" size="1" type="text" name="quarter_values[<?php echo $core_value; ?>][<?php echo $behavior_statement_index; ?>][<?php echo $ovquarter; ?>]" value="<?php echo $item['quarters'][$ovquarter - 1]; ?>" style="text-align: center;">
+                                                                <select class="form-select form-select-sm" name="quarter_values[<?php echo $core_value; ?>][<?php echo $behavior_statement_index; ?>][<?php echo $ovquarter; ?>]" style="text-align: center;">
+                                                                    <option value="AO" <?php echo $item['quarters'][$ovquarter - 1] === 'AO' ? 'selected' : ''; ?>>AO</option>
+                                                                    <option value="SO" <?php echo $item['quarters'][$ovquarter - 1] === 'SO' ? 'selected' : ''; ?>>SO</option>
+                                                                    <option value="RO" <?php echo $item['quarters'][$ovquarter - 1] === 'RO' ? 'selected' : ''; ?>>RO</option>
+                                                                    <option value="NO" <?php echo $item['quarters'][$ovquarter - 1] === 'NO' ? 'selected' : ''; ?>>NO</option>
+                                                                </select>
                                                             </td>
                                                         <?php endfor; ?>
                                                     </tr>

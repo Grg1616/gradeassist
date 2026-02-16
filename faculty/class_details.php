@@ -2249,7 +2249,7 @@ if ($query_run) {
                 <!-- Attendance tab content -->
                 <div class="tab-pane fade" id="pills-attendance" role="tabpanel" aria-labelledby="pills-attendance-tab">
 
-                 <form action="crud_attendance.php" method="POST">
+                 <form action="crud_attendance.php" method="POST" id="attendanceForm">
                     <div class="table-responsive">
                         <table class="table table-sm table-hover table-bordered" style="width: 100%;">
                             <thead>
@@ -2384,11 +2384,6 @@ if ($query_run) {
                                                                    data-column="<?php echo $month_id; ?>"
                                                                    onkeydown="navigateWithArrows(event, this)"
                                                                    maxlength="2"/>
-                                                            <input type='hidden' name='class_id' value="<?php echo $class_id; ?>">
-                                                            <input type='hidden' name='load_id' value="<?php echo $load_id; ?>">
-                                                            <input type='hidden' name='month_id' value="<?php echo $month_id; ?>">
-                                                            <input type='hidden' name='school_year_id' value="<?php echo $school_year; ?>">
-                                                            <input type='hidden' name='quarter' value="<?php echo $quarter; ?>">
                                                         </td>
                                                         <?php
 
@@ -2418,13 +2413,51 @@ if ($query_run) {
 
                             </tbody>
                         </table>
-                    </div>
+    </div>
 
-                    <button type="submit" name="edit_attendance" class="btn btn-sm btn-success" style="padding: 5px 10px;" <?php if ($is_submitted) echo 'disabled'; ?>>
+                    <input type='hidden' name='class_id' value="<?php echo $class_id; ?>">
+                    <input type='hidden' name='load_id' value="<?php echo $load_id; ?>">
+                    <input type='hidden' name='school_year_id' value="<?php echo $school_year; ?>">
+                    <input type='hidden' name='quarter' value="<?php echo $quarter; ?>">
+                    <input type='hidden' name='edit_attendance' value="1">
+
+                    <button type="button" id="attendanceSaveBtn" class="btn btn-sm btn-success" style="padding: 5px 10px;" <?php if ($is_submitted) echo 'disabled'; ?>>
                         <i class="bi bi-save"></i> Save Changes
                     </button>
 
                 </form>
+
+<!-- Attendance Confirmation Modal -->
+<div class="modal fade" id="attendanceConfirmModal" tabindex="-1" aria-labelledby="attendanceConfirmLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="attendanceConfirmLabel">Confirm Save</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to save the attendance changes?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="confirmAttendanceSave">
+          <i class="bi bi-save"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('attendanceSaveBtn').addEventListener('click', function() {
+    const modal = new bootstrap.Modal(document.getElementById('attendanceConfirmModal'));
+    modal.show();
+});
+
+document.getElementById('confirmAttendanceSave').addEventListener('click', function() {
+    document.getElementById('attendanceForm').submit();
+});
+</script>
 
 
                 </div>
@@ -2865,6 +2898,15 @@ function navigateWithArrows(event, currentInput) {
             nextInput = document.getElementById(`pt${nextColumn}_input_${studentId}`);
         } else if (type === 'quarterly') {
             nextInput = document.getElementById(`qa_input_${studentId}`);
+        } else if (type === 'attendance') {
+            // For attendance, find the next month column in the same row
+            const nextInputs = currentRow.querySelectorAll(`input[data-student-id="${studentId}"][data-type="attendance"]`);
+            for (let i = 0; i < nextInputs.length; i++) {
+                if (nextInputs[i] === currentInput && nextInputs[i + 1]) {
+                    nextInput = nextInputs[i + 1];
+                    break;
+                }
+            }
         }
         
         if (nextInput) {
@@ -2887,6 +2929,15 @@ function navigateWithArrows(event, currentInput) {
             prevInput = document.getElementById(`pt${prevColumn}_input_${studentId}`);
         } else if (type === 'quarterly') {
             prevInput = document.getElementById(`qa_input_${studentId}`);
+        } else if (type === 'attendance') {
+            // For attendance, find the previous month column in the same row
+            const prevInputs = currentRow.querySelectorAll(`input[data-student-id="${studentId}"][data-type="attendance"]`);
+            for (let i = 0; i < prevInputs.length; i++) {
+                if (prevInputs[i] === currentInput && prevInputs[i - 1]) {
+                    prevInput = prevInputs[i - 1];
+                    break;
+                }
+            }
         }
         
         if (prevInput) {
@@ -2898,26 +2949,41 @@ function navigateWithArrows(event, currentInput) {
         event.preventDefault();
         // Find next row that contains a student
         let nextRow = currentRow.nextElementSibling;
-        while (nextRow && !nextRow.querySelector('input[name="student_id[]"]')) {
+        let searchCondition = (type === 'attendance') 
+            ? (row) => row.querySelector('input[data-type="attendance"]') 
+            : (row) => row.querySelector('input[name="student_id[]"]');
+        
+        while (nextRow && !searchCondition(nextRow)) {
             nextRow = nextRow.nextElementSibling;
         }
         if (nextRow) {
-            const nextSidInput = nextRow.querySelector('input[name="student_id[]"]');
-            const nextSid = nextSidInput ? nextSidInput.value : null;
-            if (nextSid) {
-                let nextInput = null;
-                if (type === 'written') {
-                    nextInput = document.getElementById(`w${currentColumn}_input_${nextSid}`);
-                } else if (type === 'performance') {
-                    nextInput = document.getElementById(`pt${currentColumn}_input_${nextSid}`);
-                } else if (type === 'quarterly') {
-                    nextInput = document.getElementById(`qa_input_${nextSid}`);
+            let nextInput = null;
+            if (type === 'attendance') {
+                // For attendance, find the input with the same month column
+                const allAttendanceInputs = nextRow.querySelectorAll('input[data-type="attendance"]');
+                for (let input of allAttendanceInputs) {
+                    if (input.dataset.column === currentInput.dataset.column) {
+                        nextInput = input;
+                        break;
+                    }
                 }
+            } else {
+                const nextSidInput = nextRow.querySelector('input[name="student_id[]"]');
+                const nextSid = nextSidInput ? nextSidInput.value : null;
+                if (nextSid) {
+                    if (type === 'written') {
+                        nextInput = document.getElementById(`w${currentColumn}_input_${nextSid}`);
+                    } else if (type === 'performance') {
+                        nextInput = document.getElementById(`pt${currentColumn}_input_${nextSid}`);
+                    } else if (type === 'quarterly') {
+                        nextInput = document.getElementById(`qa_input_${nextSid}`);
+                    }
+                }
+            }
 
-                if (nextInput) {
-                    nextInput.focus();
-                    nextInput.select();
-                }
+            if (nextInput) {
+                nextInput.focus();
+                nextInput.select();
             }
         }
     }
@@ -2925,26 +2991,41 @@ function navigateWithArrows(event, currentInput) {
         event.preventDefault();
         // Find previous row that contains a student
         let prevRow = currentRow.previousElementSibling;
-        while (prevRow && !prevRow.querySelector('input[name="student_id[]"]')) {
+        let searchCondition = (type === 'attendance') 
+            ? (row) => row.querySelector('input[data-type="attendance"]') 
+            : (row) => row.querySelector('input[name="student_id[]"]');
+        
+        while (prevRow && !searchCondition(prevRow)) {
             prevRow = prevRow.previousElementSibling;
         }
         if (prevRow) {
-            const prevSidInput = prevRow.querySelector('input[name="student_id[]"]');
-            const prevSid = prevSidInput ? prevSidInput.value : null;
-            if (prevSid) {
-                let prevInput = null;
-                if (type === 'written') {
-                    prevInput = document.getElementById(`w${currentColumn}_input_${prevSid}`);
-                } else if (type === 'performance') {
-                    prevInput = document.getElementById(`pt${currentColumn}_input_${prevSid}`);
-                } else if (type === 'quarterly') {
-                    prevInput = document.getElementById(`qa_input_${prevSid}`);
+            let prevInput = null;
+            if (type === 'attendance') {
+                // For attendance, find the input with the same month column
+                const allAttendanceInputs = prevRow.querySelectorAll('input[data-type="attendance"]');
+                for (let input of allAttendanceInputs) {
+                    if (input.dataset.column === currentInput.dataset.column) {
+                        prevInput = input;
+                        break;
+                    }
                 }
+            } else {
+                const prevSidInput = prevRow.querySelector('input[name="student_id[]"]');
+                const prevSid = prevSidInput ? prevSidInput.value : null;
+                if (prevSid) {
+                    if (type === 'written') {
+                        prevInput = document.getElementById(`w${currentColumn}_input_${prevSid}`);
+                    } else if (type === 'performance') {
+                        prevInput = document.getElementById(`pt${currentColumn}_input_${prevSid}`);
+                    } else if (type === 'quarterly') {
+                        prevInput = document.getElementById(`qa_input_${prevSid}`);
+                    }
+                }
+            }
 
-                if (prevInput) {
-                    prevInput.focus();
-                    prevInput.select();
-                }
+            if (prevInput) {
+                prevInput.focus();
+                prevInput.select();
             }
         }
     }
@@ -3076,4 +3157,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php
 include('../assets/includes/footer.php');
-?>
+?>  

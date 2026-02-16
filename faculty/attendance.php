@@ -1,6 +1,7 @@
 <?php
 session_start();
-if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['userType']) && in_array($_SESSION['userType'], ['principal', 'chairperson', 'registrar', 'faculty'])) {
+// Only faculty members (advisers) should access attendance
+if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['userType']) && $_SESSION['userType'] === 'faculty') {
     include('../assets/includes/header.php');
     include('../assets/includes/navbar_faculty.php');
     require '../db_conn.php';
@@ -193,6 +194,7 @@ function getTotalStudents($conn, $class_id) {
                                         if ($count % 4 == 0) echo '</div>'; // close row
                                     endforeach; 
                                     if ($count % 4 != 0) echo '</div>'; // close last row if not closed
+
                                     ?>
                                 </div>
                             </div><!-- End List View -->

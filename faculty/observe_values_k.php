@@ -119,10 +119,38 @@ $value_text_equivalents = [
                                     ?>
                                     <tr style="white-space: nowrap;">
                                         <td class='text-start'><?php echo $value_text_equivalents[$row['value']]; ?></td>
-                                        <td><input class="input" size="1" style="text-align: center;" type="text" name="quarter_1_<?php echo $row['value']; ?>" value="<?php echo $row['quarter_1']; ?>"></td>
-                                        <td><input class="input" size="1" style="text-align: center;" type="text" name="quarter_2_<?php echo $row['value']; ?>" value="<?php echo $row['quarter_2']; ?>"></td>
-                                        <td><input class="input" size="1" style="text-align: center;" type="text" name="quarter_3_<?php echo $row['value']; ?>" value="<?php echo $row['quarter_3']; ?>"></td>
-                                        <td><input class="input" size="1" style="text-align: center;" type="text" name="quarter_4_<?php echo $row['value']; ?>" value="<?php echo $row['quarter_4']; ?>"></td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="quarter_1_<?php echo $row['value']; ?>" style="text-align: center;">
+                                                <option value="AO" <?php echo $row['quarter_1'] === 'AO' ? 'selected' : ''; ?>>AO</option>
+                                                <option value="SO" <?php echo $row['quarter_1'] === 'SO' ? 'selected' : ''; ?>>SO</option>
+                                                <option value="RO" <?php echo $row['quarter_1'] === 'RO' ? 'selected' : ''; ?>>RO</option>
+                                                <option value="NO" <?php echo $row['quarter_1'] === 'NO' ? 'selected' : ''; ?>>NO</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="quarter_2_<?php echo $row['value']; ?>" style="text-align: center;">
+                                                <option value="AO" <?php echo $row['quarter_2'] === 'AO' ? 'selected' : ''; ?>>AO</option>
+                                                <option value="SO" <?php echo $row['quarter_2'] === 'SO' ? 'selected' : ''; ?>>SO</option>
+                                                <option value="RO" <?php echo $row['quarter_2'] === 'RO' ? 'selected' : ''; ?>>RO</option>
+                                                <option value="NO" <?php echo $row['quarter_2'] === 'NO' ? 'selected' : ''; ?>>NO</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="quarter_3_<?php echo $row['value']; ?>" style="text-align: center;">
+                                                <option value="AO" <?php echo $row['quarter_3'] === 'AO' ? 'selected' : ''; ?>>AO</option>
+                                                <option value="SO" <?php echo $row['quarter_3'] === 'SO' ? 'selected' : ''; ?>>SO</option>
+                                                <option value="RO" <?php echo $row['quarter_3'] === 'RO' ? 'selected' : ''; ?>>RO</option>
+                                                <option value="NO" <?php echo $row['quarter_3'] === 'NO' ? 'selected' : ''; ?>>NO</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="quarter_4_<?php echo $row['value']; ?>" style="text-align: center;">
+                                                <option value="AO" <?php echo $row['quarter_4'] === 'AO' ? 'selected' : ''; ?>>AO</option>
+                                                <option value="SO" <?php echo $row['quarter_4'] === 'SO' ? 'selected' : ''; ?>>SO</option>
+                                                <option value="RO" <?php echo $row['quarter_4'] === 'RO' ? 'selected' : ''; ?>>RO</option>
+                                                <option value="NO" <?php echo $row['quarter_4'] === 'NO' ? 'selected' : ''; ?>>NO</option>
+                                            </select>
+                                        </td>
                                     </tr>
                                     <?php
                                 }

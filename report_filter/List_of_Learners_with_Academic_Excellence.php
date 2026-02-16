@@ -21,8 +21,7 @@
          <div class="col-md-12">
             <div class="form-floating mb-3">
                 <select id="formFormat" name="formFormat" class="form-select" aria-label="Select Class">
-                    <option disabled selected>Select Form Format</option>
-                    <option value="1" <?php if(isset($_POST['formFormat']) && $_POST['formFormat'] == '1') echo 'selected'; ?>>Entire Academic Year</option>
+                    <option value="1" <?php if(!isset($_POST['formFormat']) || $_POST['formFormat'] == '1') echo 'selected'; ?>>Entire Academic Year</option>
                     <option value="2" <?php if(isset($_POST['formFormat']) && $_POST['formFormat'] == '2') echo 'selected'; ?>>Quarterly</option>
                 </select>
                 <label for="formFormat">Form Format</label>
@@ -33,9 +32,7 @@
         <div class="col-md-12">
             <div class="form-floating mb-3">
                     <select class="form-select" id="quarter" name="quarter" aria-label="Filter Department">
-                        <option disabled selected>Select Quarter</option>
-                        
-                            <option value="1" <?php if(isset($_POST['quarter']) && $_POST['quarter'] == '1') echo 'selected'; ?>>First Quarter</option>
+                            <option value="1" <?php if(!isset($_POST['quarter']) || $_POST['quarter'] == '1') echo 'selected'; ?>>First Quarter</option>
                             <option value="2" <?php if(isset($_POST['quarter']) && $_POST['quarter'] == '2') echo 'selected'; ?>>Second Quarter</option>
                             <option value="3" <?php if(isset($_POST['quarter']) && $_POST['quarter'] == '3') echo 'selected'; ?>>Third Quarter</option>
                             <option value="4" <?php if(isset($_POST['quarter']) && $_POST['quarter'] == '4') echo 'selected'; ?>>Fourth Quarter</option>
@@ -235,11 +232,6 @@
 $school_year = isset($_POST['school_year']) ? $_POST['school_year'] : '';
 $class_id = isset($_POST['class_id']) ? $_POST['class_id'] : '';
 $class = '';
-if (!empty($school_year) && !empty($class_id)) {
-
-    // Sanitize the input to prevent SQL injection
-    $school_year = mysqli_real_escape_string($conn, $school_year);
-    $class_id = mysqli_real_escape_string($conn, $class_id);
 
     // Construct the SQL query
     $query1 = "SELECT class.*, 
@@ -273,7 +265,7 @@ if (!empty($school_year) && !empty($class_id)) {
         echo "Error executing query: " . $conn->error;
     }
 
-}
+
 ?>
 
 <?php
@@ -355,7 +347,7 @@ if (!empty($semester)) {
     $semesterName = 'Semester';
 }
 
-$quarter = isset($_POST['quarter']) ? $_POST['quarter'] : '';
+$quarter = isset($_POST['quarter']) ? $_POST['quarter'] : '1';
 
 if (!empty($quarter)) {
     if ($quarter == 1) {
@@ -391,7 +383,7 @@ if (!empty($class_id)) {
     $class_students_count = 0;
 }
 
-$formFormat = isset($_POST['formFormat']) ? $_POST['formFormat'] : '';
+$formFormat = isset($_POST['formFormat']) ? $_POST['formFormat'] : '1';
 
 if (!empty($formFormat) && !empty($class) && !empty($academic_year)) {
     if ($formFormat == 1) {
@@ -499,11 +491,11 @@ $html = '<table border="1" style="border-collapse: collapse; width: 100%;">
 
 $school_year = isset($_POST['school_year']) ? mysqli_real_escape_string($conn, $_POST['school_year']) : '';
 $class_id = isset($_POST['class_id']) ? mysqli_real_escape_string($conn, $_POST['class_id']) : '';
-$quarter = isset($_POST['quarter']) ? mysqli_real_escape_string($conn, $_POST['quarter']) : '';
+$quarter = isset($_POST['quarter']) ? mysqli_real_escape_string($conn, $_POST['quarter']) : '1';
 
 $prev_student_name = ''; // Initialize previous student name
 
-if (!empty($school_year) && !empty($class_id)) {
+if (!empty($school_year) && !empty($class_id) && !empty($formFormat)) {
     // Execute the SQL query
     $query = "SELECT sg.*, l.*, s.lastName, s.firstName, s.middleName, sj.courseTitle, sj.courseCode
               FROM subject_grades sg
@@ -573,42 +565,47 @@ if (!empty($school_year) && !empty($class_id)) {
                         }
                     }
                 } else {
-                    if (strpos($row['courseCode'], 'MAPEH') !== false) {
-                        // Calculate the final grade for MAPEH by summing up the grades from the selected quarter
-                        $quarter_column = 'q' . $quarter . '_grade'; // Get the column name based on the selected quarter
+                    // Only process quarterly data if quarter is selected
+                    if (!empty($quarter)) {
+                        if (strpos($row['courseCode'], 'MAPEH') !== false) {
+                            // Calculate the final grade for MAPEH by summing up the grades from the selected quarter
+                            $quarter_column = 'q' . $quarter . '_grade'; // Get the column name based on the selected quarter
 
-                        $mapeh_query = "SELECT SUM($quarter_column) AS quarter_total
-                                        FROM subject_grades sg
-                                        JOIN loads l ON sg.load_id = l.id
-                                        JOIN subjects sj ON l.subject_id = sj.id
-                                        WHERE sg.student_id = " . $row['student_id'] . " 
-                                        AND l.school_year_id = '$school_year' 
-                                        AND l.class_id = '$class_id'
-                                        AND sj.courseCode = 'MAPEH'";
+                            $mapeh_query = "SELECT SUM($quarter_column) AS quarter_total
+                                            FROM subject_grades sg
+                                            JOIN loads l ON sg.load_id = l.id
+                                            JOIN subjects sj ON l.subject_id = sj.id
+                                            WHERE sg.student_id = " . $row['student_id'] . " 
+                                            AND l.school_year_id = '$school_year' 
+                                            AND l.class_id = '$class_id'
+                                            AND sj.courseCode = 'MAPEH'";
 
-                        $mapeh_result = $conn->query($mapeh_query);
+                            $mapeh_result = $conn->query($mapeh_query);
 
-                        if ($mapeh_result && $mapeh_result->num_rows > 0) {
-                            $mapeh_row = $mapeh_result->fetch_assoc();
-                            if (isset($mapeh_row['quarter_total']) && $mapeh_row['quarter_total'] !== '') {
-                                // Calculate the final grade for MAPEH
-                                $finalGrade = $mapeh_row['quarter_total']; // No need to divide by 4 for single-quarter grades
+                            if ($mapeh_result && $mapeh_result->num_rows > 0) {
+                                $mapeh_row = $mapeh_result->fetch_assoc();
+                                if (isset($mapeh_row['quarter_total']) && $mapeh_row['quarter_total'] !== '') {
+                                    // Calculate the final grade for MAPEH
+                                    $finalGrade = $mapeh_row['quarter_total']; // No need to divide by 4 for single-quarter grades
+                                } else {
+                                    $finalGrade = null; // Set final grade as null if the query fails or no data found
+                                }
                             } else {
                                 $finalGrade = null; // Set final grade as null if the query fails or no data found
                             }
                         } else {
-                            $finalGrade = null; // Set final grade as null if the query fails or no data found
+                            // Check if the grade for the selected quarter is present
+                            $quarter_column = 'q' . $quarter . '_grade'; // Get the column name based on the selected quarter
+
+                            if (isset($row[$quarter_column]) && $row[$quarter_column] !== '') {
+                                // Set final grade as the grade for the selected quarter
+                                $finalGrade = $row[$quarter_column];
+                            } else {
+                                $finalGrade = null; // Set final grade as null if the selected quarter grade is missing
+                            }
                         }
                     } else {
-                        // Check if the grade for the selected quarter is present
-                        $quarter_column = 'q' . $quarter . '_grade'; // Get the column name based on the selected quarter
-
-                        if (isset($row[$quarter_column]) && $row[$quarter_column] !== '') {
-                            // Set final grade as the grade for the selected quarter
-                            $finalGrade = $row[$quarter_column];
-                        } else {
-                            $finalGrade = null; // Set final grade as null if the selected quarter grade is missing
-                        }
+                        $finalGrade = null; // Set final grade as null if quarter is not selected
                     }
                 }
 

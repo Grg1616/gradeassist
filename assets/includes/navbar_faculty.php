@@ -195,14 +195,17 @@ updateClock();
     $query = "SELECT faculty_id FROM loads WHERE faculty_id = $user_id";
     $result = $conn->query($query);
     $show_reports = $result && $result->num_rows > 0; // Check if query was successful and returned rows
+    $user_type = isset($_SESSION['userType']) ? $_SESSION['userType'] : '';
 ?>
 
+    <?php if ($user_type === 'faculty'): ?>
     <li class="nav-item">
       <a class="nav-link collapsed" href="attendance.php">
         <i class="bi bi-check2-square"></i>
         <span>Attendance</span> 
       </a>
     </li>
+    <?php endif; ?>
 <?php if ($show_reports): ?>
     <li class="nav-item">
         <a class="nav-link collapsed" href="class.php">
