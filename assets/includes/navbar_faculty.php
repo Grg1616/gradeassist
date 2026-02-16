@@ -199,12 +199,13 @@ updateClock();
 ?>
 
     <?php if ($user_type === 'faculty'): ?>
-    <li class="nav-item">
+   
+   <!--   <li class="nav-item">
       <a class="nav-link collapsed" href="attendance.php">
         <i class="bi bi-check2-square"></i>
         <span>Attendance</span> 
       </a>
-    </li>
+    </li> -- Attendance Nav -->
     <?php endif; ?>
 <?php if ($show_reports): ?>
     <li class="nav-item">

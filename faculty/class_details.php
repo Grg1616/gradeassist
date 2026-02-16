@@ -1128,7 +1128,7 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                             </tbody>
                         </table>
                      </div>
-                <div class="row align-items-center px-3 py-2">
+                <div class="row align-items-center ms-3 px-3 py-2">
                     <div class="col-auto">
                         <div class="toggle-wrapper">
                             <div class="switchToggle">
@@ -1369,7 +1369,7 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                             </tbody>
                         </table>    
                     </div>
-                    <div class="row align-items-center px-3 py-2">
+                    <div class="row align-items-center ms-3  px-3 py-2">
                             <div class="col-auto">
                                 <div class="toggle-wrapper">
                                     <div class="switchToggle">
@@ -1597,7 +1597,7 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && isset($class_
                     </tbody>
                 </table>
             </div>
-            <div class="row align-items-center px-3 py-2">
+            <div class="row align-items-center ms-3  px-3 py-2">
                 <div class="col-auto">
                     <div class="toggle-wrapper">
                         <div class="switchToggle">
@@ -2086,7 +2086,7 @@ if ($query_run) {
         $genderGroup = (in_array($gender, ['male','m']) ? 'male' : (in_array($gender, ['female','f']) ? 'female' : 'other'));
         if ($genderGroup !== $currentGenderGroup) {
             $label = ($genderGroup === 'male') ? 'Male' : (($genderGroup === 'female') ? 'Female' : 'Other / Unspecified');
-            echo "<tr class=\"table-secondary small text-start\"><td colspan=\"3\"><strong>" . htmlspecialchars($label) . "</strong></td></tr>";
+            echo "<tr class=\"table small text-start\"><td colspan=\"3\"><strong>" . htmlspecialchars($label) . "</strong></td></tr>";
             $currentGenderGroup = $genderGroup;
         }
         $finalGrade = "N/A"; // Initialize final grade with a default value
