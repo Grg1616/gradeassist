@@ -130,9 +130,17 @@ require '../db_conn.php';
                 <div class="col-lg-8 col mt-1">
                   <h1 class="fw-bold text-white text-end mb-0" style="color: #012970;">
                   <?php
+                  // Get the current/latest school year
+                  $school_year_query = "SELECT MAX(id) AS newest_id FROM academic_calendar";
+                  $school_year_result = mysqli_query($conn, $school_year_query);
+                  $school_year_row = mysqli_fetch_assoc($school_year_result);
+                  $current_school_year = $school_year_row['newest_id'] ?? 0;
+                  
                   $query = "SELECT DISTINCT subjects.id FROM subjects 
                   JOIN loads ON loads.subject_id = subjects.id 
-                  WHERE loads.faculty_id = {$_SESSION['user_id']} ORDER BY subjects.id";
+                  WHERE loads.faculty_id = {$_SESSION['user_id']} 
+                  AND loads.school_year_id = $current_school_year
+                  ORDER BY subjects.id";
                   $query_run = mysqli_query($conn, $query);
                   $row = mysqli_num_rows($query_run);
                   echo mysqli_num_rows($query_run) ?: "0";
@@ -143,16 +151,7 @@ require '../db_conn.php';
               </div>
             </div>
             <?php
-              require '../db_conn.php';
-              $query = "SELECT MAX(id) AS newest_id FROM academic_calendar";
-              $result = mysqli_query($conn, $query);
-              if ($result) {
-                  $row = mysqli_fetch_assoc($result);
-                  $school_year = $row['newest_id'];
-              } else {
-                  $school_year = '';
-              }
-              $school_year = "class.php?school_year=$school_year";
+              $school_year = "class.php?school_year=$current_school_year";
               ?>
             <a href="view_subjects.php">
             <div class="card-footer">
@@ -176,10 +175,19 @@ require '../db_conn.php';
                 <div class="col-lg-8 col mt-1">
                   <h1 class="fw-bold text-white text-end mb-0" style="color: #012970;">
                   <?php
+                  // Get the current/latest school year
+                  $school_year_query = "SELECT MAX(id) AS newest_id FROM academic_calendar";
+                  $school_year_result = mysqli_query($conn, $school_year_query);
+                  $school_year_row = mysqli_fetch_assoc($school_year_result);
+                  $current_school_year = $school_year_row['newest_id'] ?? 0;
+                  
+                  // Count students for the current school year
                   $query = "SELECT DISTINCT students.id FROM students 
                       JOIN class_students ON class_students.student_id = students.id 
                       JOIN loads ON loads.class_id = class_students.class_id 
-                      WHERE loads.faculty_id = {$_SESSION['user_id']} ORDER BY students.id";
+                      WHERE loads.faculty_id = {$_SESSION['user_id']} 
+                      AND class_students.school_year_id = $current_school_year
+                      ORDER BY students.id";
                   $query_run = mysqli_query($conn, $query);
                   echo mysqli_num_rows($query_run) ?: "0";
                   ?>
@@ -189,16 +197,7 @@ require '../db_conn.php';
               </div>
             </div>
             <?php
-              require '../db_conn.php';
-              $query = "SELECT MAX(id) AS newest_id FROM academic_calendar";
-              $result = mysqli_query($conn, $query);
-              if ($result) {
-                  $row = mysqli_fetch_assoc($result);
-                  $school_year = $row['newest_id'];
-              } else {
-                  $school_year = '';
-              }
-              $school_year = "class.php?school_year=$school_year";
+              $school_year_url = "student_list.php?school_year=$current_school_year";
               ?>
             <a href="student_list.php">
             <div class="card-footer">
@@ -221,7 +220,14 @@ require '../db_conn.php';
                 <div class="col-lg-8 col mt-1">
                   <h1 class="fw-bold text-white text-end mb-0" style="color: #012970;">
                     <?php
-                    $query = "SELECT id FROM loads WHERE faculty_id = {$_SESSION['user_id']} ORDER BY id";
+                    // Get the current/latest school year
+                    $school_year_query = "SELECT MAX(id) AS newest_id FROM academic_calendar";
+                    $school_year_result = mysqli_query($conn, $school_year_query);
+                    $school_year_row = mysqli_fetch_assoc($school_year_result);
+                    $current_school_year = $school_year_row['newest_id'] ?? 0;
+                    
+                    $query = "SELECT id FROM loads WHERE faculty_id = {$_SESSION['user_id']} 
+                    AND school_year_id = $current_school_year ORDER BY id";
                     $query_run = mysqli_query($conn, $query);
                     $row = mysqli_num_rows($query_run);
                     echo mysqli_num_rows($query_run) ?: "0";
@@ -233,16 +239,7 @@ require '../db_conn.php';
               </div>
             </div>
             <?php
-              require '../db_conn.php';
-              $query = "SELECT MAX(id) AS newest_id FROM academic_calendar";
-              $result = mysqli_query($conn, $query);
-              if ($result) {
-                  $row = mysqli_fetch_assoc($result);
-                  $school_year = $row['newest_id'];
-              } else {
-                  $school_year = '';
-              }
-              $school_year = "class.php?school_year=$school_year";
+              $school_year = "class.php?school_year=$current_school_year";
               ?>
             <a href="<?php echo $school_year; ?>">
             <div class="card-footer">

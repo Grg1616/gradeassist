@@ -4,6 +4,42 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
     include('../assets/includes/header.php');
     include('../assets/includes/navbar_faculty.php');
     require '../db_conn.php';
+
+    // ========== SCHOOL YEAR FILTER LOGIC ========== //
+    // Get the current/latest school year (same approach as dashboard)
+    $school_year_query = "SELECT MAX(id) AS newest_id FROM academic_calendar";
+    $school_year_result = mysqli_query($conn, $school_year_query);
+    $school_year_row = mysqli_fetch_assoc($school_year_result);
+    $selected_syid = $school_year_row['newest_id'] ?? 0;
+
+    // Get label for the selected year (for header)
+    $selected_sy_label = '';
+    if ($selected_syid > 0) {
+        $label_res = mysqli_query($conn, "SELECT class_start, class_end FROM academic_calendar WHERE id = $selected_syid");
+        if ($lrow = mysqli_fetch_assoc($label_res)) {
+            $selected_sy_label = date('Y', strtotime($lrow['class_start'])) . '-' . date('Y', strtotime($lrow['class_end']));
+        }
+    }
+    // ============================================== //
+
+    // Prepare classes query – get all classes where faculty teaches (advisory + subject load)
+    $query = "SELECT DISTINCT 
+        class.id, 
+        class.section, 
+        class.gradeLevel,
+        class.school_year_id,
+        sy.class_start,
+        sy.class_end
+    FROM class
+    JOIN academic_calendar sy ON class.school_year_id = sy.id
+    WHERE (class.faculty_id = {$_SESSION['user_id']} OR class.id IN (
+        SELECT loads.class_id FROM loads WHERE loads.faculty_id = {$_SESSION['user_id']}
+    ))
+    AND class.school_year_id = $selected_syid
+    ORDER BY class.gradeLevel ASC, class.section ASC;";
+
+    $query_run = mysqli_query($conn, $query);
+    $classes_count = ($query_run) ? mysqli_num_rows($query_run) : 0;
 ?>
 
 <main id="main" class="main">
@@ -19,41 +55,11 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
     </div><!-- End Page Title -->
 
     <section class="section">
-        <?php
-        // Prepare classes query early so header can show counts and school year
-$query = "SELECT DISTINCT 
-            class.id, 
-            class.section, 
-            class.gradeLevel,
-            class.school_year_id,
-            sy.class_start,
-            sy.class_end
-          FROM class
-          JOIN academic_calendar sy ON class.school_year_id = sy.id
-          LEFT JOIN loads ON loads.class_id = class.id AND loads.faculty_id = {$_SESSION['user_id']}
-          WHERE class.faculty_id = {$_SESSION['user_id']} OR loads.id IS NOT NULL
-          ORDER BY class.gradeLevel ASC, class.section ASC";
-
-        $query_run = mysqli_query($conn, $query);
-        $classes_count = ($query_run) ? mysqli_num_rows($query_run) : 0;
-        $school_year = '';
-        if ($classes_count > 0) {
-            $first_row = mysqli_fetch_assoc($query_run);
-            if (!empty($first_row['class_start']) && !empty($first_row['class_end'])) {
-                $start_year = date('Y', strtotime($first_row['class_start']));
-                $end_year = date('Y', strtotime($first_row['class_end']));
-                $school_year = $start_year . '-' . $end_year;
-            }
-            // rewind result pointer for later loops
-            mysqli_data_seek($query_run, 0);
-        }
-        ?>
-
         <!-- Tab Navigation -->
         <div class="card shadow">
             <div class="card-header justify-content-between px-4 d-flex align-items-center">
                 <div>
-                    <h5 class="mb-0">Total view of <?php echo $classes_count; ?> Classes for AY <?php echo $school_year; ?></h5>
+                    <h5 class="mb-0">Total view of <?php echo $classes_count; ?> Classes for AY <?php echo $selected_sy_label ?: 'N/A'; ?></h5>
                     <small class="text-muted">Select a class to view students</small>
                 </div>
             </div>
@@ -79,20 +85,13 @@ $query = "SELECT DISTINCT
                             <?php
                             if ($classes_count > 0) {
                                 while ($class = mysqli_fetch_assoc($query_run)) {
-                                    // Count students in this class
+                                    // Count students in this class for the current school year
                                     $student_count_query = "SELECT COUNT(DISTINCT class_students.student_id) as student_count
                                                            FROM class_students
-                                                           WHERE class_students.class_id = {$class['id']}";
+                                                           WHERE class_students.class_id = {$class['id']}
+                                                           AND class_students.school_year_id = {$class['school_year_id']}";
                                     $student_count_result = mysqli_query($conn, $student_count_query);
                                     $student_count = mysqli_fetch_assoc($student_count_result)['student_count'];
-
-                                    // School year for this specific class
-                                    $sy_display = '';
-                                    if (!empty($class['class_start']) && !empty($class['class_end'])) {
-                                        $start_year = date('Y', strtotime($class['class_start']));
-                                        $end_year = date('Y', strtotime($class['class_end']));
-                                        $sy_display = $start_year . '-' . $end_year;
-                                    }
                                     ?>
                                     <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
                                         <div class="card"
@@ -116,7 +115,7 @@ $query = "SELECT DISTINCT
                                     <?php
                                 }
                             } else {
-                                echo '<div class="col-12"><div class="alert alert-info" role="alert">No classes assigned to you yet.</div></div>';
+                                echo '<div class="col-12"><div class="alert alert-info" role="alert">No classes assigned to you yet for this school year.</div></div>';
                             }
                             ?>
                         </div>
@@ -137,10 +136,11 @@ $query = "SELECT DISTINCT
                                     <select id="gradeFilter" class="form-select">
                                         <option value="">All Grades</option>
                                         <?php
+                                        // Grade filter now respects the selected school year
                                         $gradeQuery = "SELECT DISTINCT class.gradeLevel 
                                                     FROM class 
-                                                    LEFT JOIN loads ON loads.class_id = class.id AND loads.faculty_id = {$_SESSION['user_id']}
-                                                    WHERE class.faculty_id = {$_SESSION['user_id']} OR loads.id IS NOT NULL 
+                                                    WHERE class.faculty_id = {$_SESSION['user_id']}
+                                                    AND class.school_year_id = $selected_syid
                                                     ORDER BY class.gradeLevel";
                                         $gradeResult = mysqli_query($conn, $gradeQuery);
                                         while ($grade = mysqli_fetch_assoc($gradeResult)) {
@@ -172,17 +172,20 @@ $query = "SELECT DISTINCT
                                     </thead>
                                     <tbody>
                                         <?php
+                                        // Reset pointer for table loop
                                         mysqli_data_seek($query_run, 0);
                                         $counter = 1;
                                         if ($classes_count > 0) {
                                             while ($class = mysqli_fetch_assoc($query_run)) {
+                                                // Count students with school year filter
                                                 $student_count_query = "SELECT COUNT(DISTINCT class_students.student_id) as student_count
                                                                        FROM class_students
-                                                                       WHERE class_students.class_id = {$class['id']}";
+                                                                       WHERE class_students.class_id = {$class['id']}
+                                                                       AND class_students.school_year_id = {$class['school_year_id']}";
                                                 $student_count_result = mysqli_query($conn, $student_count_query);
                                                 $student_count = mysqli_fetch_assoc($student_count_result)['student_count'];
 
-                                                // Student preview (first 3 names)
+                                                // Student preview (first 3 names) with school year filter
                                                 $students_query = "SELECT 
                                                                     students.firstName,
                                                                     students.middleName,
@@ -190,6 +193,7 @@ $query = "SELECT DISTINCT
                                                                   FROM class_students
                                                                   JOIN students ON class_students.student_id = students.id
                                                                   WHERE class_students.class_id = {$class['id']}
+                                                                  AND class_students.school_year_id = {$class['school_year_id']}
                                                                   ORDER BY students.lastName, students.firstName
                                                                   LIMIT 3";
                                                 $students_result = mysqli_query($conn, $students_query);
@@ -242,7 +246,7 @@ $query = "SELECT DISTINCT
                                                 <td colspan="7" class="text-center py-4">
                                                     <div class="text-muted">
                                                         <i class="bi bi-people display-4"></i>
-                                                        <h5 class="mt-3">No classes assigned yet</h5>
+                                                        <h5 class="mt-3">No classes assigned yet for this school year</h5>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -434,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
-// ----- PDF Export (opens generate_student_list_pdf.php) -----
+// ----- PDF Export (opens faculty_student_list.php) -----
 window.exportPDF = function() {
     const classId = document.getElementById('currentClassId').value;
     if (!classId) {
