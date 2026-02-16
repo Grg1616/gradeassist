@@ -126,7 +126,7 @@ if (!empty($academic_year) && !empty($class)) {
         <div class="col-md-2 mb-2">
             <div class="form-group">
                 <div class="form-floating" data-bs-toggle="tooltip" data-bs-placement="top" title="Select chart color">
-                    <input type="color" class="form-control" id="colorPicker" name="chart_color" value="<?php echo isset($_POST['chart_color']) ? $_POST['chart_color'] : '#026601'; ?>">
+                    <input type="color" class="form-control" id="colorPicker" name="chart_color" value="<?php echo isset($_POST['chart_color']) ? $_POST['chart_color'] : '#012466'; ?>">
                     <label for="colorPicker" class="form-label">Chart Color</label>
                 </div>
             </div>
@@ -222,9 +222,9 @@ if (!empty($academic_year) && !empty($class)) {
                 <h6 class="fw-bold text-start mb-0 text-dark">Top Five Highest Final Grades</h6>
                 <i id="btnGroupDrop1" type="button" class="bi bi-three-dots-vertical btn btn-md btn-dw dropdown-toggle no-caret text-dark" data-bs-toggle="dropdown" aria-expanded="false"></i>
                 <ul class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                    <li><a class="dropdown-item btn" id="exportPngHighest"><i class="bi bi-person-plus"></i>Export as PNG</a></li>
-                    <li><a class="dropdown-item btn" id="exportJpgHighest"><i class="bi bi-gear"></i>Export as JPEG</a></li>
-                    <li><a class="dropdown-item btn" id="exportPdfHighest"><i class="bi bi-trash"></i>Export as PDF</a></li>
+                    <li><a class="dropdown-item btn" id="exportPngHighest">Export as PNG</a></li>
+                    <li><a class="dropdown-item btn" id="exportJpgHighest">Export as JPEG</a></li>
+                    <li><a class="dropdown-item btn" id="exportPdfHighest">Export as PDF</a></li>
                 </ul>
             </div>
             <div class="card-body">

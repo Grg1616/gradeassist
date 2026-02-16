@@ -110,6 +110,29 @@ if (isset($_SESSION['id'])) {
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="deleteImageModal" tabindex="-1" aria-labelledby="deleteImageLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-dark" id="deleteImageLabel" style="font-weight: bold;">
+                    <i class="bi bi-exclamation-triangle"></i>&nbsp; Delete Profile Picture
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your profile picture? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteImageForm" method="POST" action="crud_account.php" style="display: inline;">
+                    <input type="hidden" name="delete_image" value="1">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
     
     <section class="section profile">
       <div class="row">
@@ -204,7 +227,7 @@ if (isset($_SESSION['id'])) {
                         <div class="pt-2">
                           <a href="#" class="btn btn-primary btn-sm" data-bs-toggle="modal"
                         data-bs-target="#change_image" title="Upload new profile image"><i class="bi bi-upload"></i></a>
-                          <a href="#" class="btn btn-danger btn-sm" title="Remove my profile image"><i class="bi bi-trash"></i></a>
+                          <a href="#" class="btn btn-danger btn-sm" title="Remove my profile image" data-bs-toggle="modal" data-bs-target="#deleteImageModal"><i class="bi bi-trash"></i></a>
                         </div>
                       </div>
                     </div>

@@ -100,6 +100,40 @@ if (isset($_POST['update_account_settings'])) {
         }
     }
 }
+
+if (isset($_POST['delete_image'])) {
+    $id = $_SESSION['id'];
+    
+    // Get current image from database
+    $query = "SELECT image FROM users WHERE id = '$id'";
+    $result = mysqli_query($conn, $query);
+    $user = mysqli_fetch_assoc($result);
+    
+    if ($user && !empty($user['image'])) {
+        // Delete the file from uploads folder
+        $oldprofilepic = "../uploads/" . $user['image'];
+        if (file_exists($oldprofilepic)) {
+            unlink($oldprofilepic);
+        }
+        
+        // Update database to remove image reference
+        $update_query = "UPDATE users SET image = NULL WHERE id = '$id'";
+        if (mysqli_query($conn, $update_query)) {
+            $_SESSION['image'] = NULL;
+            $_SESSION['message'] = "Profile picture deleted successfully.";
+            header('Location: account_settings.php');
+            exit();
+        } else {
+            $_SESSION['message_danger'] = "Failed to delete profile picture.";
+            header('Location: account_settings.php');
+            exit();
+        }
+    } else {
+        $_SESSION['message_danger'] = "No profile picture to delete.";
+        header('Location: account_settings.php');
+        exit();
+    }
+}
     
 
 if (isset($_POST['edit_password'])) {

@@ -293,6 +293,13 @@ updateClock();
       </li><!-- End F.A.Q Page Nav -->
 
       <li class="nav-item">
+        <a class="nav-link collapsed" href="backup.php">
+          <i class="bi bi-database"></i>
+          <span>Backup & Restore</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="modal" data-bs-target="#signOutModal">
           <i class="bi bi-box-arrow-right"></i>
           <span>Logout</span>
