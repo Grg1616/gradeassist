@@ -337,10 +337,10 @@ require '../db_conn.php';
             <table id="example" class="table table-sm table-hover table-bordered display nowrap" style="width:100%">
               <thead>
                 <tr>
+                  <th class="">Subject Area</th>
                   <th class="">Written Work</th>
                   <th class="">Performance Task</th>
                   <th class="">Quarterly Assestment</th>
-                  <th class="">Subject Area</th>
                   <th class="">Level</th>
                   <th class="no-export">Actions</th>
                 </tr>
@@ -355,11 +355,11 @@ $query_run = mysqli_query($conn, $query);
 if (mysqli_num_rows($query_run) > 0) {
     foreach ($query_run as $row) {
         ?>
-        <tr class="small" style="white-space: nowrap; text-align:left;">
+        <tr class="small" style="white-space: nowrap; text-align:left;">   
+            <td><?= $row['subjectArea'] ?: '-'; ?></td>
             <td><?= $row['written'] ?: '-'; ?></td>
             <td><?= $row['performance'] ?: '-'; ?></td>
             <td><?= $row['assessment'] ?: '-'; ?></td>
-            <td><?= $row['subjectArea'] ?: '-'; ?></td>
             <td><?= $row['level'] ?: '-'; ?></td>
             <td class="d-flex justify-content-center">
 

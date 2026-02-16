@@ -141,7 +141,6 @@ require '../db_conn.php';
                                   <option selected disabled value>Select Gender</option>
                                   <option value="Male">Male</option>
                                   <option value="Female">Female</option>
-                                  <option value="Others">Others</option>
                               </select>
                               <label for="gender">Gender</label>
                               <div class="invalid-feedback">
@@ -157,7 +156,19 @@ require '../db_conn.php';
                       </div>
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
-                              <input type="text" class="form-control" id="religion" name="religion" placeholder="Your Name" required>
+                              <select class="form-select" id="religion" name="religion" aria-label="Religion" required>
+                                  <option selected disabled value>Select Religion</option>
+                                  <option value="Catholic">Catholic</option>
+                                  <option value="Christian">Christian</option>
+                                  <option value="Islam">Islam</option>
+                                  <option value="Baptist">Baptist</option>
+                                  <option value="Seventh Day Adventist">Seventh Day Adventist</option>
+                                  <option value="Jehovah's Witness">Jehovah's Witness</option>
+                                  <option value="Buddhist">Buddhist</option>
+                                  <option value="Hindu">Hindu</option>
+                                  <option value="Orthodox">Orthodox</option>
+                                  <option value="Other">Other</option>
+                              </select>
                               <label for="religion">Religion</label>
                           </div>
                       </div>
@@ -166,7 +177,7 @@ require '../db_conn.php';
                   <div class="row">
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
-                              <input type="number" class="form-control" id="contactNumber" name="contactNumber" placeholder="Your Name" required>
+                              <input type="text" class="form-control" id="contactNumber" name="contactNumber" placeholder="0912345678" pattern="^(0|\+63)\d{9,}$" title="Contact number must start with 0 or +63" required>
                               <label for="contactNumber">Contact Number</label>
                           </div>
                       </div>
@@ -207,7 +218,7 @@ require '../db_conn.php';
                   <div class="row">
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
-                              <input type="number" class="form-control" id="fatherContact" name="fatherContact" placeholder="Your Name">
+                              <input type="text" class="form-control" id="fatherContact" name="fatherContact" placeholder="0912345678" pattern="^(0|\+63)\d{9,}$|^$" title="Contact number must start with 0 or +63">
                               <label for="fatherContact">Contact Number</label>
                           </div>
                       </div>
@@ -240,7 +251,7 @@ require '../db_conn.php';
                   <div class="row">
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
-                              <input type="number" class="form-control" id="motherContact" name="motherContact" placeholder="Your Name">
+                              <input type="text" class="form-control" id="motherContact" name="motherContact" placeholder="0912345678" pattern="^(0|\+63)\d{9,}$|^$" title="Contact number must start with 0 or +63">
                               <label for="motherContact">Contact Number</label>
                           </div>
                       </div>
@@ -273,7 +284,7 @@ require '../db_conn.php';
                   <div class="row">
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
-                              <input type="tel" class="form-control" id="guardianContact" name="guardianContact" placeholder="Your Name">
+                              <input type="text" class="form-control" id="guardianContact" name="guardianContact" placeholder="0912345678" pattern="^(0|\+63)\d{9,}$|^$" title="Contact number must start with 0 or +63">
                               <label for="guardianContact">Contact Number</label>
                           </div>
                       </div>
@@ -375,7 +386,19 @@ require '../db_conn.php';
                       </div>
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
-                              <input type="text" class="form-control" id="edit_religion" name="edit_religion" placeholder="Your Name" required>
+                              <select class="form-select" id="edit_religion" name="edit_religion" aria-label="Religion" required>
+                                  <option selected disabled value>Select Religion</option>
+                                  <option value="Catholic">Catholic</option>
+                                  <option value="Christian">Christian</option>
+                                  <option value="Islam">Islam</option>
+                                  <option value="Baptist">Baptist</option>
+                                  <option value="Seventh Day Adventist">Seventh Day Adventist</option>
+                                  <option value="Jehovah's Witness">Jehovah's Witness</option>
+                                  <option value="Buddhist">Buddhist</option>
+                                  <option value="Hindu">Hindu</option>
+                                  <option value="Orthodox">Orthodox</option>
+                                  <option value="Other">Other</option>
+                              </select>
                               <label for="edit_religion">Religion</label>
                           </div>
                       </div>
@@ -384,8 +407,9 @@ require '../db_conn.php';
                   <div class="row">
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
-                              <input type="number" class="form-control" id="edit_contactNumber" name="edit_contactNumber" placeholder="Your Name" required>
+                              <input type="text" class="form-control" id="edit_contactNumber" name="edit_contactNumber" placeholder="0912345678" pattern="^(0|\+63)\d{9,}$" title="Contact number must start with 0 or +63" required>
                               <label for="edit_contactNumber">Contact Number</label>
+                              <small class="text-muted">Format: 09xxxxxxxxx or +639xxxxxxxxx</small>
                           </div>
                       </div>
                       <div class="col-md-8 mb-3">
@@ -425,7 +449,7 @@ require '../db_conn.php';
                   <div class="row">
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
-                              <input type="number" class="form-control" id="edit_fatherContact" name="edit_fatherContact" placeholder="Your Name" >
+                              <input type="text" class="form-control" id="edit_fatherContact" name="edit_fatherContact" placeholder="0912345678" pattern="^(0|\+63)\d{9,}$|^$" title="Contact number must start with 0 or +63" >
                               <label for="edit_fatherContact">Contact Number</label>
                           </div>
                       </div>
@@ -458,7 +482,7 @@ require '../db_conn.php';
                   <div class="row">
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
-                              <input type="number" class="form-control" id="edit_motherContact" name="edit_motherContact" placeholder="Your Name" >
+                              <input type="text" class="form-control" id="edit_motherContact" name="edit_motherContact" placeholder="0912345678" pattern="^(0|\+63)\d{9,}$|^$" title="Contact number must start with 0 or +63" >
                               <label for="edit_motherContact">Contact Number</label>
                           </div>
                       </div>
@@ -491,7 +515,7 @@ require '../db_conn.php';
                   <div class="row">
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
-                              <input type="number" class="form-control" id="edit_guardianContact" name="edit_guardianContact" placeholder="Your Name" >
+                              <input type="text" class="form-control" id="edit_guardianContact" name="edit_guardianContact" placeholder="0912345678" pattern="^(0|\+63)\d{9,}$|^$" title="Contact number must start with 0 or +63" >
                               <label for="edit_guardianContact">Contact Number</label>
                           </div>
                       </div>
@@ -565,18 +589,12 @@ require '../db_conn.php';
                   <input type="file" class="form-control" id="studentFile" name="studentFile" accept=".csv, .xls, .xlsx" required>
                 </div>
                 <div>
-                  <p class="mb-0">Please ensure that the CSV/XLS/XLSX file follows the correct format to avoid errors during import. The required columns are:</p>
-                  <ul>
-                    <li>SR-Code</li>
-                    <li>LRN</li>
-                    <li>First Name</li>
-                    <li>Middle Name</li>
-                    <li>Last Name</li>
+                  <p class="mb-0">Please ensure that the <strong>CSV/XLS/XLSX</strong> file follows the correct format to avoid errors during import. Please <strong>download</strong> the sample file for reference.</p>
                 </div>
-                <div class="mb-3"> <!-- a note for the user to download the sample CSV file -->
+                <div class="mb-3 py-3 text-center"> <!-- a note for the user to download the sample CSV file -->
                   <a href="Import_Student_template.xlsx" class="btn btn-sm btn-outline-primary shadow-sm" download>
-                    <span class="bi bi-download fa-sm me-1"></span> 
-                    Download Sample File
+                    <span class="bi bi-file-earmark-arrow-down fa-sm"></span> 
+                    Download Template
                   </a>
                   
                 </div>

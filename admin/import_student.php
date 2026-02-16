@@ -20,11 +20,33 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
         return $h;
     }
 
-    // Helper: return SQL literal or NULL for empty values
-    function sql_val_or_null($conn, $v) {
-        $v = trim($v);
-        if ($v === '') return "NULL";
-        return "'" . mysqli_real_escape_string($conn, $v) . "'";
+    // Helper: normalize contact number to 09123456789 format
+    function normalize_contact_number($contact) {
+        $contact = trim($contact);
+        if (empty($contact)) return $contact;
+
+        // Remove any non-digit characters (e.g., spaces, dashes)
+        $contact = preg_replace('/\D/', '', $contact);
+
+        // Convert +63 to 0 (e.g., +639123456789 → 09123456789)
+        if (strpos($contact, '+63') === 0) {
+            return '0' . substr($contact, 3);
+        }
+        // If it's 10 digits starting with 9, add leading zero (e.g., 9123456789 → 09123456789)
+        if (preg_match('/^9\d{9}$/', $contact)) {
+            return '0' . $contact;
+        }
+        // Otherwise return as is (may already be 11 digits starting with 0)
+        return $contact;
+    }
+
+    // Helper: return NULL or escaped string for SQL
+    function sql_val_or_null($conn, $value) {
+        $value = trim($value);
+        if ($value === '') {
+            return 'NULL';
+        }
+        return "'" . mysqli_real_escape_string($conn, $value) . "'";
     }
 
     // Simple XLSX reader (first worksheet only)
@@ -246,6 +268,12 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                 continue;
             }
 
+            // --- Normalize contact numbers (convert +63 to 0, add leading zero to 10-digit numbers starting with 9) ---
+            $contact = normalize_contact_number($contact);
+            $fatherContact = normalize_contact_number($fatherContact);
+            $motherContact = normalize_contact_number($motherContact);
+            $guardianContact = normalize_contact_number($guardianContact);
+
             // Extra safety: SR‑Code must not be empty (already covered by required check)
             if ($sr_code === '') continue;
 
@@ -284,7 +312,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                      '" . mysqli_real_escape_string($conn, $middleName) . "', 
                      '" . mysqli_real_escape_string($conn, $lastName) . "',
                      '" . mysqli_real_escape_string($conn, $gender) . "', 
-                     " . sql_val_or_null($conn, $birthday) . ",   -- ✅ Now uses NULL for invalid/missing
+                     " . sql_val_or_null($conn, $birthday) . ", 
                      '" . mysqli_real_escape_string($conn, $religion) . "', 
                      '" . mysqli_real_escape_string($conn, $contact) . "', 
                      '" . mysqli_real_escape_string($conn, $email) . "', 
