@@ -90,29 +90,11 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                             <h5 class="card-title">List of Subjects Assigned</h5>
                             <!-- Filter Button (opens modal) -->
                             <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#academicYearFilterModal">
-                                <i class="bi bi-funnel"></i> Filter by Academic Year
+                                <i class="bi bi-funnel"></i> Filter Options
                             </button>
                         </div>
 
                         <?php
-                        // ==================== BACKEND: Display Active Filter Badge ====================
-                        if ($filter_school_year_id > 0) {
-                            // Find the selected academic year text from the previously fetched array
-                            $selected_year_text = '';
-                            foreach ($academic_years as $ay) {
-                                if ($ay['id'] == $filter_school_year_id) {
-                                    $selected_year_text = date('Y', strtotime($ay['class_start'])) . ' - ' . date('Y', strtotime($ay['class_end']));
-                                    break;
-                                }
-                            }
-                            if ($selected_year_text) {
-                                $badge_message = ($default_to_current) ? 'Current Academic Year: ' : 'Active Filter: ';
-                                echo '<div class="alert alert-info py-2">' . $badge_message . '<strong>' . htmlspecialchars($selected_year_text) . '</strong> <a href="view_subjects.php" class="float-end">Clear Filter</a></div>';
-                            }
-                        } elseif ($filter_school_year_id == 0 && isset($_GET['school_year_id']) && $_GET['school_year_id'] === '') {
-                            // User explicitly selected "All Academic Years"
-                            echo '<div class="alert alert-secondary py-2">Showing <strong>All Academic Years</strong> <a href="view_subjects.php" class="float-end">Clear Filter</a></div>';
-                        }
 
                         // Display session messages (success/error)
                         if (isset($_SESSION['message'])) {
@@ -141,9 +123,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                                         <th scope="col">Course Title</th>
                                         <th scope="col"><small>Subject Area</small></th>
                                         <th scope="col"><small>Contact Hours</small></th>
-                                        <th scope="col"><small>Section</small></th>
                                         <th scope="col"><small>Grade Level</small></th>
-                                        <th scope="col"><small>Total Students</small></th>
                                         <th scope="col"><small>School Year</small></th>
                                     </tr>
                                 </thead>
@@ -219,9 +199,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                                                     <td><?php echo htmlspecialchars($row['courseTitle']); ?></td>
                                                     <td><?php echo htmlspecialchars($row['subjectArea']); ?></td>
                                                     <td><?php echo htmlspecialchars($row['contactHours']); ?> hrs</td>
-                                                    <td><?php echo htmlspecialchars($section); ?></td>
                                                     <td><?php echo htmlspecialchars($row['gradeLevel']); ?></td>
-                                                    <td><strong><?php echo $total_students; ?> student<?php echo $total_students != 1 ? 's' : ''; ?></strong></td>
                                                     <td> <?php echo $school_year; ?></td>
                                                 </tr>
                                     <?php
@@ -270,7 +248,6 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                         <div class="mb-3">
                             <label for="school_year_id" class="form-label">Academic Year</label>
                             <select class="form-select" id="school_year_id" name="school_year_id">
-                                <option value="">All Academic Years</option>
                                 <?php 
                                 // Populate dropdown with academic years from the backend array
                                 foreach ($academic_years as $ay): 
@@ -309,3 +286,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
 <?php
 include('../assets/includes/footer.php');
 ?>
+<style>
+    .float-end{
+        text-decoration: none;
+    }
