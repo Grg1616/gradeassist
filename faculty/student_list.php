@@ -5,24 +5,29 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
     include('../assets/includes/navbar_faculty.php');
     require '../db_conn.php';
 
-    // ========== SCHOOL YEAR FILTER LOGIC ========== //
-    // Get the current/latest school year (same approach as dashboard)
-    $school_year_query = "SELECT MAX(id) AS newest_id FROM academic_calendar";
-    $school_year_result = mysqli_query($conn, $school_year_query);
-    $school_year_row = mysqli_fetch_assoc($school_year_result);
-    $selected_syid = $school_year_row['newest_id'] ?? 0;
-
-    // Get label for the selected year (for header)
-    $selected_sy_label = '';
-    if ($selected_syid > 0) {
-        $label_res = mysqli_query($conn, "SELECT class_start, class_end FROM academic_calendar WHERE id = $selected_syid");
-        if ($lrow = mysqli_fetch_assoc($label_res)) {
-            $selected_sy_label = date('Y', strtotime($lrow['class_start'])) . '-' . date('Y', strtotime($lrow['class_end']));
-        }
+    // ========== ACADEMIC YEAR SELECTION ========== //
+    // Get all academic years for dropdown
+    $sy_options = [];
+    $sy_query = "SELECT id, class_start, class_end FROM academic_calendar ORDER BY id DESC";
+    $sy_result = mysqli_query($conn, $sy_query);
+    while ($sy_row = mysqli_fetch_assoc($sy_result)) {
+        $sy_options[$sy_row['id']] = date('Y', strtotime($sy_row['class_start'])) . '-' . date('Y', strtotime($sy_row['class_end']));
     }
+
+    // Determine selected school year ID
+    $selected_syid = isset($_GET['sy_id']) ? (int)$_GET['sy_id'] : 0;
+    if ($selected_syid === 0 || !array_key_exists($selected_syid, $sy_options)) {
+        // Default to the latest year
+        $selected_syid = (int) mysqli_fetch_assoc(mysqli_query($conn, "SELECT MAX(id) AS max_id FROM academic_calendar"))['max_id'];
+    }
+    // Optionally store in session for other pages
+    $_SESSION['selected_school_year'] = $selected_syid;
+
+    // Get label for the selected year
+    $selected_sy_label = $sy_options[$selected_syid] ?? 'N/A';
     // ============================================== //
 
-    // Prepare classes query – get all classes where faculty teaches (advisory + subject load)
+    // Prepare classes query – get all classes where faculty teaches (advisory + subject load) for selected year
     $query = "SELECT DISTINCT 
         class.id, 
         class.section, 
@@ -55,15 +60,20 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
     </div><!-- End Page Title -->
 
     <section class="section">
-        <!-- Tab Navigation -->
         <div class="card shadow">
-            <div class="card-header justify-content-between px-4 d-flex align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
                 <div>
-                    <h5 class="mb-0">Total view of <?php echo $classes_count; ?> Classes for AY <?php echo $selected_sy_label ?: 'N/A'; ?></h5>
-                    <small class="text-muted">Select a class to view students</small>
+                    <h5 class="mb-0">Classes for AY <?php echo $selected_sy_label; ?></h5>
+                </div>
+                <!-- Button to open filter modal -->
+                <div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#filterModal">
+                        <i class="bi bi-funnel"></i> Filter Option
+                    </button>
                 </div>
             </div>
             <div class="card-body">
+                <!-- Tab Navigation -->
                 <ul class="nav nav-tabs nav-tabs-bordered" id="viewTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-view" type="button" role="tab">
@@ -84,8 +94,9 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                         <div id="classCardsContainer" class="row mt-3">
                             <?php
                             if ($classes_count > 0) {
+                                mysqli_data_seek($query_run, 0); // reset pointer
                                 while ($class = mysqli_fetch_assoc($query_run)) {
-                                    // Count students in this class for the current school year
+                                    // Count students in this class for the selected school year
                                     $student_count_query = "SELECT COUNT(DISTINCT class_students.student_id) as student_count
                                                            FROM class_students
                                                            WHERE class_students.class_id = {$class['id']}
@@ -94,21 +105,21 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                                     $student_count = mysqli_fetch_assoc($student_count_result)['student_count'];
                                     ?>
                                     <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
-                                        <div class="card"
+                                        <div class="card class-card"
                                              data-class-id="<?php echo $class['id']; ?>"
                                              data-class-name="<?php echo $class['gradeLevel']; ?> - <?php echo htmlspecialchars($class['section']); ?>">
                                             <div class="card-header bg-secondary fw-bold fs-5 text-white"><?php echo $class['gradeLevel'] . ' - ' . $class['section']; ?></div>
-                                             <div class="card-body">
-                                            <div class="text-end py-2 mb-2">
-                                                <i class="bi bi-people"></i> <?php echo $student_count; ?> Student<?php echo $student_count != 1 ? 's' : ''; ?>
-                                            </div>    
-                                            <div class="card-footer bg-transparent d-flex align-items-end justify-content-end">
-                                                <button class="btn btn-sm btn-outline-secondary view-students-btn"
-                                                        data-class-id="<?php echo $class['id']; ?>"
-                                                        data-class-name="<?php echo $class['gradeLevel']; ?> - <?php echo htmlspecialchars($class['section']); ?>">
-                                                    View <i class="bi bi-chevron-right"></i>
-                                                </button>
-                                            </div>
+                                            <div class="card-body">
+                                                <div class="text-end py-2 mb-2">
+                                                    <i class="bi bi-people"></i> <?php echo $student_count; ?> Student<?php echo $student_count != 1 ? 's' : ''; ?>
+                                                </div>    
+                                                <div class="card-footer bg-transparent d-flex align-items-end justify-content-end">
+                                                    <button class="btn btn-sm btn-outline-secondary view-students-btn"
+                                                            data-class-id="<?php echo $class['id']; ?>"
+                                                            data-class-name="<?php echo $class['gradeLevel']; ?> - <?php echo htmlspecialchars($class['section']); ?>">
+                                                        View <i class="bi bi-chevron-right"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -124,7 +135,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                     <!-- ========== TABLE VIEW ========== -->
                     <div class="tab-pane fade" id="table-view" role="tabpanel">
                         <div class="mt-3">
-                            <!-- Search and Filter -->
+                            <!-- Search and Filter (kept as is) -->
                             <div class="row mb-3">
                                 <div class="col-md-8">
                                     <div class="input-group">
@@ -136,7 +147,6 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                                     <select id="gradeFilter" class="form-select">
                                         <option value="">All Grades</option>
                                         <?php
-                                        // Grade filter now respects the selected school year
                                         $gradeQuery = "SELECT DISTINCT class.gradeLevel 
                                                     FROM class 
                                                     WHERE class.faculty_id = {$_SESSION['user_id']}
@@ -208,12 +218,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                                                 }
 
                                                 // School year for this row
-                                                $sy_display = '';
-                                                if (!empty($class['class_start']) && !empty($class['class_end'])) {
-                                                    $start_year = date('Y', strtotime($class['class_start']));
-                                                    $end_year = date('Y', strtotime($class['class_end']));
-                                                    $sy_display = $start_year . '-' . $end_year;
-                                                }
+                                                $sy_display = $sy_options[$class['school_year_id']] ?? '';
                                                 ?>
                                                 <tr data-grade="<?php echo $class['gradeLevel']; ?>">
                                                     <td><?php echo $counter++; ?></td>
@@ -262,7 +267,35 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
             </div>
         </div>
 
-        <!-- ========== STUDENT MODAL (UNIFIED, WITH PDF EXPORT) ========== -->
+        <!-- ========== FILTER MODAL (Academic Year) ========== -->
+        <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="filterModalLabel">Select Academic Year</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="modalSySelect" class="form-label">Academic Year</label>
+                            <select id="modalSySelect" class="form-select">
+                                <?php foreach ($sy_options as $id => $label): ?>
+                                    <option value="<?php echo $id; ?>" <?php echo $id == $selected_syid ? 'selected' : ''; ?>>
+                                        <?php echo $label; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" onclick="applyYearFilter()">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== STUDENT MODAL (Gender Separated) ========== -->
         <div class="modal fade" id="studentsModal" tabindex="-1" aria-labelledby="studentsModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
@@ -271,10 +304,14 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- Hidden field to store the current class ID for PDF export -->
+                        <!-- Hidden field to store the current class ID and school year for PDF export -->
                         <input type="hidden" id="currentClassId" value="">
+                        <input type="hidden" id="currentSchoolYearId" value="<?php echo $selected_syid; ?>">
+
+                        <!-- Male Students Section -->
+                        <h6 class="mt-2">Male</h6>
                         <div class="table-responsive">
-                            <table class="table table-hover" id="modalStudentsTable">
+                            <table class="table table-hover" id="maleStudentsTable">
                                 <thead>
                                     <tr>
                                         <th>SR Code</th>
@@ -285,9 +322,28 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                                         <th>Contact</th>
                                     </tr>
                                 </thead>
-                                <tbody id="modalStudentsBody">
-                                    <!-- Students loaded via AJAX -->
-                                    <tr><td colspan="6" class="text-center">Select a class to view students.</td></tr>
+                                <tbody id="maleStudentsBody">
+                                    <tr><td colspan="6" class="text-center">Select a class to view male students.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Female Students Section -->
+                        <h6 class="mt-4">Female</h6>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="femaleStudentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>SR Code</th>
+                                        <th>LRN</th>
+                                        <th>Name</th>                                       
+                                        <th>Gender</th>
+                                        <th>Email</th>
+                                        <th>Contact</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="femaleStudentsBody">
+                                    <tr><td colspan="6" class="text-center">Select a class to view female students.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -323,8 +379,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Modal
     const studentsModal = new bootstrap.Modal(document.getElementById('studentsModal'));
     const modalClassName = document.getElementById('modalClassName');
-    const modalStudentsBody = document.getElementById('modalStudentsBody');
+    const maleStudentsBody = document.getElementById('maleStudentsBody');
+    const femaleStudentsBody = document.getElementById('femaleStudentsBody');
     const currentClassId = document.getElementById('currentClassId');
+    const currentSchoolYearId = document.getElementById('currentSchoolYearId').value;
 
     // Table search & filter
     const classSearch = document.getElementById('classSearch');
@@ -333,7 +391,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // ----- Card View: Click on entire card -----
     classCards.forEach(card => {
         card.addEventListener('click', function(e) {
-            // Ignore if the click is on the view button itself
             if (!e.target.closest('.view-students-btn')) {
                 const classId = this.dataset.classId;
                 const className = this.dataset.className;
@@ -345,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ----- Card View: Click on the "View" button -----
     viewStudentsBtns.forEach(btn => {
         btn.addEventListener('click', function(e) {
-            e.stopPropagation(); // Prevent card click event
+            e.stopPropagation();
             const classId = this.dataset.classId;
             const className = this.dataset.className;
             loadStudentsInModal(classId, className);
@@ -361,44 +418,80 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ----- Load students into modal (AJAX) -----
+    // ----- Load students into modal (AJAX) with school year and separate by gender -----
     function loadStudentsInModal(classId, className) {
         modalClassName.textContent = className;
-        currentClassId.value = classId; // Store for PDF export
-        modalStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>';
+        currentClassId.value = classId;
+
+        // Clear previous content and show loading spinners
+        maleStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>';
+        femaleStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>';
 
         studentsModal.show();
 
-        fetch('get_students.php?class_id=' + classId)
+        fetch('get_students.php?class_id=' + classId + '&school_year_id=' + currentSchoolYearId)
             .then(response => {
                 if (!response.ok) throw new Error('Network response was not ok');
                 return response.json();
             })
             .then(data => {
-                modalStudentsBody.innerHTML = '';
+                maleStudentsBody.innerHTML = '';
+                femaleStudentsBody.innerHTML = '';
+
                 if (data.success && data.students && data.students.length > 0) {
-                    data.students.forEach(student => {
-                        const middle = student.middleName ? student.middleName.charAt(0) + '.' : '';
-                        const fullName = `${student.lastName}, ${student.firstName} ${middle} `.trim();
-                        const row = `
-                            <tr>
-                                <td>${student.sr_code || 'N/A'}</td>
-                                <td>${student.lrn || 'N/A'}</td>
-                                <td>${fullName}</td>
-                                <td>${student.gender || 'N/A'}</td>
-                                <td>${student.email || 'N/A'}</td>
-                                <td>${student.contactNumber || student.phone || 'N/A'}</td>
-                            </tr>
-                        `;
-                        modalStudentsBody.innerHTML += row;
-                    });
+                    const maleStudents = data.students.filter(s => s.gender && s.gender.toLowerCase() === 'male');
+                    const femaleStudents = data.students.filter(s => s.gender && s.gender.toLowerCase() === 'female');
+
+                    // Populate male table
+                    if (maleStudents.length > 0) {
+                        maleStudents.forEach(student => {
+                            const middle = student.middleName ? student.middleName.charAt(0) + '.' : '';
+                            const fullName = `${student.lastName}, ${student.firstName} ${middle}`.trim();
+                            const row = `
+                                <tr>
+                                    <td>${student.sr_code || 'N/A'}</td>
+                                    <td>${student.lrn || 'N/A'}</td>
+                                    <td>${fullName}</td>
+                                    <td>${student.gender || 'N/A'}</td>
+                                    <td>${student.email || 'N/A'}</td>
+                                    <td>${student.contactNumber || student.phone || 'N/A'}</td>
+                                </tr>
+                            `;
+                            maleStudentsBody.innerHTML += row;
+                        });
+                    } else {
+                        maleStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No male students found</td></tr>';
+                    }
+
+                    // Populate female table
+                    if (femaleStudents.length > 0) {
+                        femaleStudents.forEach(student => {
+                            const middle = student.middleName ? student.middleName.charAt(0) + '.' : '';
+                            const fullName = `${student.lastName}, ${student.firstName} ${middle}`.trim();
+                            const row = `
+                                <tr>
+                                    <td>${student.sr_code || 'N/A'}</td>
+                                    <td>${student.lrn || 'N/A'}</td>
+                                    <td>${fullName}</td>
+                                    <td>${student.gender || 'N/A'}</td>
+                                    <td>${student.email || 'N/A'}</td>
+                                    <td>${student.contactNumber || student.phone || 'N/A'}</td>
+                                </tr>
+                            `;
+                            femaleStudentsBody.innerHTML += row;
+                        });
+                    } else {
+                        femaleStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No female students found</td></tr>';
+                    }
                 } else {
-                    modalStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No students found in this class</td></tr>';
+                    maleStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No students found in this class</td></tr>';
+                    femaleStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No students found in this class</td></tr>';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                modalStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading students</td></tr>';
+                maleStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading students</td></tr>';
+                femaleStudentsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading students</td></tr>';
             });
     }
 
@@ -408,9 +501,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const grade = gradeFilter ? gradeFilter.value : '';
         const rows = document.querySelectorAll('#classesTable tbody tr');
         rows.forEach(row => {
-            // Skip empty placeholder rows (no dataset.grade)
+            if (row.cells.length < 7) return; // skip empty placeholder
             const rowText = row.textContent.toLowerCase();
-            const rowGrade = row.dataset ? (row.dataset.grade || '') : '';
+            const rowGrade = row.dataset.grade || '';
             const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
             const matchesGrade = grade === '' || rowGrade === grade;
             row.style.display = (matchesSearch && matchesGrade) ? '' : 'none';
@@ -418,18 +511,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (classSearch) {
-        classSearch.addEventListener('keyup', function() {
-            applyTableFilters();
-        });
+        classSearch.addEventListener('keyup', applyTableFilters);
     }
 
     if (gradeFilter) {
-        gradeFilter.addEventListener('change', function() {
-            applyTableFilters();
-        });
+        gradeFilter.addEventListener('change', applyTableFilters);
     }
 
-    // ----- Reset Table Filters (global function) -----
     window.resetTableFilters = function() {
         if (classSearch) classSearch.value = '';
         if (gradeFilter) gradeFilter.value = '';
@@ -438,19 +526,27 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
-// ----- PDF Export (opens faculty_student_list.php) -----
+// ----- Apply filter from modal and reload page -----
+window.applyYearFilter = function() {
+    const selectedSyId = document.getElementById('modalSySelect').value;
+    if (selectedSyId) {
+        window.location.href = window.location.pathname + '?sy_id=' + selectedSyId;
+    }
+};
+
+// ----- PDF Export (pass class_id and school_year_id) -----
 window.exportPDF = function() {
     const classId = document.getElementById('currentClassId').value;
+    const schoolYearId = document.getElementById('currentSchoolYearId').value;
     if (!classId) {
         alert('No class selected.');
         return;
     }
-    window.open('../reports/faculty_student_list.php?class_id=' + classId, '_blank');
+    window.open('../reports/faculty_student_list.php?class_id=' + classId + '&school_year_id=' + schoolYearId, '_blank');
 };
 </script>
 
 <style>
-/* Minimal styling – no colourful gender badges, no heavy animations */
 .nav-tabs .nav-link {
     font-weight: 500;
     padding: 12px 20px;
@@ -469,8 +565,5 @@ window.exportPDF = function() {
 }
 .table-hover tbody tr:hover {
     background-color: #f8f9fa;
-}
-.bg-info.bg-opacity-10 {
-    background-color: rgba(13, 202, 240, 0.1) !important;
 }
 </style>

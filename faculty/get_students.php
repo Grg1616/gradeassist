@@ -13,6 +13,7 @@ require '../db_conn.php';
 // Get class_id or load_id from request. If load_id supplied, resolve its class_id.
 $class_id = isset($_GET['class_id']) ? intval($_GET['class_id']) : 0;
 $load_id = isset($_GET['load_id']) ? intval($_GET['load_id']) : 0;
+$school_year_id = isset($_GET['school_year_id']) ? intval($_GET['school_year_id']) : 0;
 
 if ($load_id > 0) {
     // Resolve class_id from loads and verify faculty access
@@ -64,8 +65,9 @@ $query = "SELECT DISTINCT
             students.gender
           FROM students
           JOIN class_students ON class_students.student_id = students.id
-                    WHERE class_students.class_id = $class_id
-                    ORDER BY
+          WHERE class_students.class_id = $class_id
+          AND class_students.school_year_id = $school_year_id
+          ORDER BY
                         CASE
                             WHEN TRIM(LOWER(students.gender)) IN ('male','m') THEN 0
                             WHEN TRIM(LOWER(students.gender)) IN ('female','f') THEN 1
