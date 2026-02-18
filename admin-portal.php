@@ -1,3 +1,57 @@
+<?php
+session_start();
+require_once 'db_conn.php';
+
+
+$error = '';
+
+if (isset($_SESSION['email']) || isset($_SESSION['id'])) {
+    $email = isset($_SESSION['email']) ? $_SESSION['email'] : null;
+    $user_id = isset($_SESSION['id']) ? $_SESSION['id'] : null;
+
+
+    $query = "SELECT * FROM users WHERE email = ? OR id = ?";
+    if ($stmt = mysqli_prepare($conn, $query)) {
+        mysqli_stmt_bind_param($stmt, "ss", $email, $user_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+            $userType = $row['userType'];
+
+            switch ($userType) {
+                case 'admin':
+                    header("Location: admin/admin_dashboard.php");
+                    exit();
+                case 'principal':
+                    header("Location: faculty/faculty_dashboard.php");
+                    exit();
+                case 'faculty':
+                    header("Location: faculty/faculty_dashboard.php");
+                    exit();
+                case 'chairperson':
+                    header("Location: faculty/faculty_dashboard.php");
+                    exit();
+                case 'registrar':
+                    header("Location: faculty/faculty_dashboard.php");
+                    exit();
+                case 'student':
+                case 'parent':
+                    header("Location: student/student_dashboard.php");
+                    exit();
+                default:
+                $error = 'Unknown role for this account.';
+                    break;
+            }
+        }
+    }
+
+  
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
