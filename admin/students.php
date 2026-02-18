@@ -6,77 +6,83 @@ include('../assets/includes/navbar_admin.php');
 require '../db_conn.php';
 ?>
 
-
-  <main id="main" class="main">
+<main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Students</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">File Management</li>
-          <li class="breadcrumb-item active">Students</li>
-        </ol>
-      </nav>
+        <h1>Students</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+                <li class="breadcrumb-item">File Management</li>
+                <li class="breadcrumb-item active">Students</li>
+            </ol>
+        </nav>
     </div><!-- End Page Title -->
 
-<script>
-            <?php
-            // Check if the session message exists and show it as a SweetAlert
-            if (isset($_SESSION['message'])) {
-                echo "Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: '{$_SESSION['message']}',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        customClass: {
-                            popup: 'my-sweetalert',
-                        }
-                    });";
-                unset($_SESSION['message']); // Clear the session message after displaying it
-            }
-            if (isset($_SESSION['message_ok'])) {
-                // Replace newlines with <br> tags
-                $message = str_replace("\n", "<br>", $_SESSION['message_ok']);
-                echo "Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        html: '$message',
-                        showConfirmButton: true,
-                        customClass: {
-                            popup: 'my-sweetalert',
-                        }
-                    });";
-                unset($_SESSION['message_ok']); // Clear the session message after displaying it
-            }
-            if (isset($_SESSION['message_danger'])) {
-                echo "Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: '{$_SESSION['message_danger']}',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        customClass: {
-                            popup: 'my-sweetalert',
-                        }
-                    });";
-                unset($_SESSION['message_danger']); // Clear the session message after displaying it
-            }
-            if (isset($_SESSION['message_danger_ok'])) {
-                echo "Swal.fire({
-                        icon: 'warning',
-                        title: 'Error!',
-                        text: '{$_SESSION['message_danger_ok']}',
-                        showConfirmButton: true,
-                        customClass: {
-                            popup: 'my-sweetalert',
-                        }
-                    });";
-                unset($_SESSION['message_danger_ok']); // Clear the session message after displaying it
-            }
-            ?>
-        </script>
+    <script>
+        <?php
+        // Helper to safely output a string for JavaScript
+        function safeJsString($str) {
+            return json_encode($str, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+        }
+
+        // Display success message (plain text)
+        if (isset($_SESSION['message'])) {
+            $msg = $_SESSION['message'];
+            echo "Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: " . safeJsString($msg) . ",
+                    showConfirmButton: false,
+                    timer: 2000,
+                    customClass: { popup: 'my-sweetalert' }
+                });";
+            unset($_SESSION['message']);
+        }
+
+        // Display success message with HTML (for skipped records)
+        if (isset($_SESSION['message_ok'])) {
+            $msg = $_SESSION['message_ok'];
+            // Convert newlines to <br> and escape any HTML to prevent XSS
+            $msgHtml = nl2br(htmlspecialchars($msg, ENT_QUOTES, 'UTF-8'));
+            echo "Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    html: " . safeJsString($msgHtml) . ",
+                    showConfirmButton: true,
+                    customClass: { popup: 'my-sweetalert' }
+                });";
+            unset($_SESSION['message_ok']);
+        }
+
+        // Display danger message (error)
+        if (isset($_SESSION['message_danger'])) {
+            $msg = $_SESSION['message_danger'];
+            echo "Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: " . safeJsString($msg) . ",
+                    showConfirmButton: false,
+                    timer: 2000,
+                    customClass: { popup: 'my-sweetalert' }
+                });";
+            unset($_SESSION['message_danger']);
+        }
+
+        // Display warning message (message_danger_ok)
+        if (isset($_SESSION['message_danger_ok'])) {
+            $msg = $_SESSION['message_danger_ok'];
+            echo "Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning!',
+                    text: " . safeJsString($msg) . ",
+                    showConfirmButton: true,
+                    customClass: { popup: 'my-sweetalert' }
+                });";
+            unset($_SESSION['message_danger_ok']);
+        }
+        ?>
+    </script>
 
 
        <!--  add student -->

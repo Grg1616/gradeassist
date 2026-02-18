@@ -44,8 +44,47 @@ require '../db_conn.php';
     $guardianOccupation = mysqli_real_escape_string($conn, $_POST['guardianOccupation']);
     $guardianContact = mysqli_real_escape_string($conn, $_POST['guardianContact']);
     $guardianEmail = mysqli_real_escape_string($conn, $_POST['guardianEmail']);
-    $dateCreated = mysqli_real_escape_string($conn, $_POST['dateCreated']);
-    $dateUpdated = mysqli_real_escape_string($conn, $_POST['dateUpdated']);
+    // remove optional date fields; they aren't used in insertion
+    // $dateCreated and $dateUpdated are not expected in the add form
+
+    // trim and normalize the key fields
+    $sr_code = trim($sr_code);
+    $lrn = trim($lrn);
+    $firstName = trim($firstName);
+    $lastName = trim($lastName);
+
+    // check for duplicate sr_code
+    if ($sr_code !== '' ) {
+        $q = "SELECT 1 FROM students WHERE sr_code='$sr_code' LIMIT 1";
+        $r = mysqli_query($conn, $q);
+        if ($r && mysqli_num_rows($r) > 0) {
+            $_SESSION['message_danger'] = "A student with SR code $sr_code already exists.";
+            header('Location: students.php');
+            exit();
+        }
+    }
+
+    // check for duplicate lrn
+    if ($lrn !== '') {
+        $q = "SELECT 1 FROM students WHERE lrn='$lrn' LIMIT 1";
+        $r = mysqli_query($conn, $q);
+        if ($r && mysqli_num_rows($r) > 0) {
+            $_SESSION['message_danger'] = "A student with LRN $lrn already exists.";
+            header('Location: students.php');
+            exit();
+        }
+    }
+
+    // check for duplicate name pair
+    if ($firstName !== '' && $lastName !== '') {
+        $q = "SELECT 1 FROM students WHERE firstName='$firstName' AND lastName='$lastName' LIMIT 1";
+        $r = mysqli_query($conn, $q);
+        if ($r && mysqli_num_rows($r) > 0) {
+            $_SESSION['message_danger'] = "A student named $firstName $lastName already exists.";
+            header('Location: students.php');
+            exit();
+        }
+    }
 
     // Perform the database insertion for students
     $query = "INSERT INTO students 
@@ -129,13 +168,14 @@ require '../db_conn.php';
             $guardianContact = mysqli_real_escape_string($conn, $_POST['edit_guardianContact']);
             $guardianEmail = mysqli_real_escape_string($conn, $_POST['edit_guardianEmail']);
 
-            // $checkQuery = "SELECT * FROM students WHERE lrn = '$lrn'";
-            // $checkResult = mysqli_query($conn, $checkQuery);
-            // if (mysqli_num_rows($checkResult) > 0) {
-            //     $_SESSION['message_danger'] = "Student lrn $lrn already exists.";
-            //     header('Location: students.php');
-            //     exit();
-            // }
+            // prevent duplicates when editing (ignore current record)
+            $checkQuery = "SELECT * FROM students WHERE (lrn = '$lrn' OR sr_code = '$sr_code' OR (firstName = '$firstName' AND lastName = '$lastName')) AND id <> '$student_id'";
+            $checkResult = mysqli_query($conn, $checkQuery);
+            if (mysqli_num_rows($checkResult) > 0) {
+                $_SESSION['message_danger'] = "Another student with the same SR code, LRN, or name already exists.";
+                header('Location: students.php');
+                exit();
+            }
 
             // Perform the database update
             $query = "UPDATE students SET 

@@ -277,9 +277,23 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
             // Extra safety: SR‑Code must not be empty (already covered by required check)
             if ($sr_code === '') continue;
 
-            // --- Check for duplicate SR‑Code ---
-            $check_sql = "SELECT COUNT(*) AS count FROM students WHERE sr_code = '" . mysqli_real_escape_string($conn, $sr_code) . "'";
+            // --- Check for duplicate SR‑Code, LRN, or name ---
+            $escaped_sr = mysqli_real_escape_string($conn, $sr_code);
+            $escaped_lrn = mysqli_real_escape_string($conn, $lrn);
+            $escaped_first = mysqli_real_escape_string($conn, $firstName);
+            $escaped_last  = mysqli_real_escape_string($conn, $lastName);
+
+            $check_sql = "SELECT COUNT(*) AS count FROM students WHERE " .
+                         "sr_code = '$escaped_sr' " .
+                         "OR lrn = '$escaped_lrn' " .
+                         "OR (firstName = '$escaped_first' AND lastName = '$escaped_last')";
             $result = $conn->query($check_sql);
+            if ($result === false) {
+                // SQL error while checking for duplicates
+                $_SESSION['message_danger'] = 'Database error during duplicate check: ' . $conn->error;
+                header('Location: students.php');
+                exit();
+            }
             $row = $result->fetch_assoc();
 
             if ($row['count'] == 0) {
@@ -331,7 +345,10 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                      " . $guardianEmail_val . ")";
 
                 if ($conn->query($sql) !== TRUE) {
-                    error_log("Error importing student $sr_code: " . $conn->error);
+                    // propagate error to user
+                    $_SESSION['message_danger'] = "Error importing student $sr_code: " . $conn->error;
+                    header('Location: students.php');
+                    exit();
                 } else {
                     $inserted = true;
                     $id = mysqli_insert_id($conn);
@@ -361,10 +378,33 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
                     mysqli_query($conn, $query_parent);
                 }
             } else {
-                // Duplicate SR‑Code
+                // determine which field caused the duplicate
+                $reason = 'Duplicate record';
+                // run a more detailed query to identify reason
+                $check_detail = "SELECT sr_code, lrn, firstName, lastName FROM students " .
+                                 "WHERE sr_code = '$escaped_sr' " .
+                                 "OR lrn = '$escaped_lrn' " .
+                                 "OR (firstName = '$escaped_first' AND lastName = '$escaped_last') " .
+                                 "LIMIT 1";
+                $detail_res = $conn->query($check_detail);
+                if ($detail_res === false) {
+                    $_SESSION['message_danger'] = 'Database error during duplicate detail lookup: ' . $conn->error;
+                    header('Location: students.php');
+                    exit();
+                }
+                if ($detail_res) {
+                    $d = $detail_res->fetch_assoc();
+                    if ($d['sr_code'] === $sr_code) {
+                        $reason = 'SR-Code already exists';
+                    } elseif ($d['lrn'] === $lrn && $lrn !== '') {
+                        $reason = 'LRN already exists';
+                    } elseif ($d['firstName'] === $firstName && $d['lastName'] === $lastName) {
+                        $reason = 'Name already exists';
+                    }
+                }
                 $skippedRecords[] = [
                     'sr_code' => $sr_code,
-                    'reason'  => 'SR-Code already exists'
+                    'reason'  => $reason
                 ];
             }
         }
