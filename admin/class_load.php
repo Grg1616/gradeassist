@@ -99,8 +99,22 @@ if ($result->num_rows > 0) {
                                     $class_row = mysqli_fetch_assoc($class_result);
                                     $gradeLevel = $class_row['gradeLevel'];
 
-                                    // Fetch subjects based on gradeLevel
+                                    // Fetch subjects based on gradeLevel but exclude ones already loaded for this class/year
+                                    // first gather exclusion list
+                                    $excludeIds = [];
+                                    $exclude_sql = "SELECT subject_id FROM loads WHERE class_id = $class_id AND school_year_id = $newest_AY";
+                                    $exclude_res = mysqli_query($conn, $exclude_sql);
+                                    if ($exclude_res && mysqli_num_rows($exclude_res) > 0) {
+                                        while ($er = mysqli_fetch_assoc($exclude_res)) {
+                                            $excludeIds[] = intval($er['subject_id']);
+                                        }
+                                    }
+
                                     $query_subjects = "SELECT id, courseCode, courseTitle FROM subjects WHERE gradeLevel = '$gradeLevel'";
+                                    if (!empty($excludeIds)) {
+                                        $query_subjects .= " AND id NOT IN (" . implode(',', $excludeIds) . ")";
+                                    }
+
                                     $query_run_subjects = mysqli_query($conn, $query_subjects);
 
                                     if ($query_run_subjects && mysqli_num_rows($query_run_subjects) > 0) {
@@ -168,30 +182,76 @@ if ($result->num_rows > 0) {
                        <select id="faculty_id" name="faculty_id" class="form-select" aria-label="Select Adviser" required>
                           <option selected disabled value>Select Faculty</option>
                           <?php
-                          $query_faculty = "SELECT id, firstName, middleName, lastName FROM faculty";
-                          $query_run_faculty = mysqli_query($conn, $query_faculty);
-                          if (mysqli_num_rows($query_run_faculty) > 0) {
-                              while ($row = mysqli_fetch_assoc($query_run_faculty)) {
-                                  $firstName = $row['firstName'];
-                                  $middleName = $row['middleName'];
-                                  $lastName = $row['lastName'];
+if (isset($_GET['class_id']) && is_numeric($_GET['class_id'])) {
+    $class_id = intval($_GET['class_id']);
 
-                                  // Construct the full name with spaces before initials
-                                  $facultyLabel = $firstName . ($middleName ? ' ' . strtoupper(substr($middleName, 0, 1)) . '. ' : '') . strtoupper(substr($lastName, 0, 1)) . substr($lastName, 1);
+    // 1. Get the grade level of the selected class
+    $class_query = "SELECT gradeLevel FROM class WHERE id = $class_id";
+    $class_result = mysqli_query($conn, $class_query);
 
-                                  echo '<option value="' . $row['id'] . '">' . $facultyLabel . '</option>';
-                              }
-                          }
-                          ?>
+    if ($class_result && mysqli_num_rows($class_result) > 0) {
+        $class_row = mysqli_fetch_assoc($class_result);
+        $gradeLevel = $class_row['gradeLevel'];
+
+        // 2. Map grade level to department
+        // Adjust the mapping to match your actual grade level naming
+        if (preg_match('/Grade [1-6]/', $gradeLevel)) {
+            $department = 'Elementary';
+        } elseif (preg_match('/Grade [7-9]|Grade 10/', $gradeLevel)) {
+            $department = 'High School';
+        } else {
+            // Optional: handle other levels (e.g., Kindergarten) or default
+            $department = '';
+        }
+
+        // 3. Fetch faculty belonging to that department
+        if (!empty($department)) {
+            // Use a prepared statement or escape the department string
+            $dept_escaped = mysqli_real_escape_string($conn, $department);
+            $faculty_query = "SELECT id, firstName, middleName, lastName 
+                              FROM faculty 
+                              WHERE department = '$dept_escaped' 
+                                AND designation = 'Faculty'
+                              ORDER BY lastName, firstName";
+            $faculty_result = mysqli_query($conn, $faculty_query);
+
+            if ($faculty_result && mysqli_num_rows($faculty_result) > 0) {
+                while ($row = mysqli_fetch_assoc($faculty_result)) {
+                    $firstName = $row['firstName'];
+                    $middleName = $row['middleName'];
+                    $lastName = $row['lastName'];
+
+                    // Format name: e.g., "John A. Doe"
+                    $facultyLabel = $firstName;
+                    if (!empty($middleName)) {
+                        $facultyLabel .= ' ' . strtoupper(substr($middleName, 0, 1)) . '.';
+                    }
+                    $facultyLabel .= ' ' . ucfirst($lastName);  // or your custom capitalization
+
+                    echo '<option value="' . $row['id'] . '">' . htmlspecialchars($facultyLabel) . '</option>';
+                }
+            } else {
+                echo '<option value="">No faculty found for this department</option>';
+            }
+        } else {
+            echo '<option value="">Unable to determine department</option>';
+        }
+    } else {
+        echo '<option value="">Invalid class ID</option>';
+    }
+} else {
+    echo '<option value="">Class ID not provided</option>';
+}
+?>
                        </select>
-                        <label for="faculty_id">Adviser</label>
+                        <label for="faculty_id">Instructor</label>
                        <div class="invalid-feedback">
                             Please select a valid Adviser.
                         </div>
                     </div>
 
                      <div class="form-floating  mb-3">
-                      <input type="number" step="0.01" class="form-control" id="hours_per_week" name="hours_per_week" placeholder="Your Name" required>
+                      <input type="number" step="0.01" class="form-control" id="hours_per_week" name="hours_per_week" placeholder="Your Name" required readonly>
                       <label for="hours_per_week">Hours/Week</label>
                     </div>
 
@@ -253,87 +313,92 @@ if ($result->num_rows > 0) {
 
                     <!-- Your HTML code with PHP embedded -->
                     <div class="form-floating mb-3" id="semesterSelect" <?php if (!$displaySemesterSelect) echo 'style="display: none;"'; ?>>
-                        <select class="form-select" id="edit_semester" name="edit_semester" aria-label="Subject Area">
+                        <select class="form-select" id="edit_semester" name="edit_semester" aria-label="Subject Area" disabled>
                             <option selected disabled value>Select Semester</option>
                             <option value="1">First Semester</option>
                             <option value="2">Second Semester</option>
                         </select>
                         <label for="edit_semester">Semester</label>
                     </div>
-                    <div class="form-floating mb-3">
-                      <select id="edit_subject_id" name="edit_subject_id" class="form-select" aria-label="Select Subject" required>
-                        <option selected disabled value>Select Subject</option>
-                        <?php
-                        // Assuming $conn is the mysqli connection object
-
-                        // Check if class_id is provided and is a valid integer
-                        if (isset($_GET['class_id']) && is_numeric($_GET['class_id'])) {
-                            $class_id = intval($_GET['class_id']);
-
-                            // Fetch gradeLevel based on class_id
-                            $class_query = "SELECT gradeLevel FROM class WHERE id = $class_id";
-                            $class_result = mysqli_query($conn, $class_query);
-
-                            if ($class_result && mysqli_num_rows($class_result) > 0) {
-                                $class_row = mysqli_fetch_assoc($class_result);
-                                $gradeLevel = $class_row['gradeLevel'];
-
-                                // Fetch subjects based on gradeLevel
-                                $query_subjects = "SELECT id, courseCode, courseTitle FROM subjects WHERE gradeLevel = '$gradeLevel'";
-                                $query_run_subjects = mysqli_query($conn, $query_subjects);
-
-                                if ($query_run_subjects && mysqli_num_rows($query_run_subjects) > 0) {
-                                    while ($row = mysqli_fetch_assoc($query_run_subjects)) {
-                                        $courseCode = $row['courseCode'];
-                                        $courseTitle = $row['courseTitle'];
-                                        $subjectLabel = $courseCode ? $courseCode . '&nbsp;&nbsp;-&nbsp;&nbsp;' . $courseTitle : $courseTitle;
-                                        echo '<option value="' . $row['id'] . '">' . $subjectLabel . '</option>';
-                                    }
-                                } else {
-                                    echo "No subjects found for the provided grade level.";
-                                }
-                            } else {
-                                echo "No class found for the provided class ID.";
-                            }
-                        } else {
-                            echo "Invalid or missing class ID.";
-                        }
-                        ?>
-                      </select>
-                      <label for="edit_subject_id">Subject</label>
-                    </div>
 
                     <div class="form-floating mb-3">
                        <select id="edit_faculty_id" name="edit_faculty_id" class="form-select" aria-label="Select Adviser" required>
                           <option selected disabled value>Select Faculty</option>
-                          <?php
-                          $query_faculty = "SELECT id, firstName, middleName, lastName FROM faculty";
-                          $query_run_faculty = mysqli_query($conn, $query_faculty);
-                          if (mysqli_num_rows($query_run_faculty) > 0) {
-                              while ($row = mysqli_fetch_assoc($query_run_faculty)) {
-                                  $firstName = $row['firstName'];
-                                  $middleName = $row['middleName'];
-                                  $lastName = $row['lastName'];
+                           <?php
+                            if (isset($_GET['class_id']) && is_numeric($_GET['class_id'])) {
+                                $class_id = intval($_GET['class_id']);
 
-                                  // Construct the full name with spaces before initials
-                                  $facultyLabel = $firstName . ($middleName ? ' ' . strtoupper(substr($middleName, 0, 1)) . '. ' : '') . strtoupper(substr($lastName, 0, 1)) . substr($lastName, 1);
+                                // 1. Get the grade level of the selected class
+                                $class_query = "SELECT gradeLevel FROM class WHERE id = $class_id";
+                                $class_result = mysqli_query($conn, $class_query);
 
-                                  echo '<option value="' . $row['id'] . '">' . $facultyLabel . '</option>';
-                              }
-                          }
-                          ?>
+                                if ($class_result && mysqli_num_rows($class_result) > 0) {
+                                    $class_row = mysqli_fetch_assoc($class_result);
+                                    $gradeLevel = $class_row['gradeLevel'];
+
+                                    // 2. Map grade level to department
+                                    // Adjust the mapping to match your actual grade level naming
+                                    if (preg_match('/Grade [1-6]/', $gradeLevel)) {
+                                        $department = 'Elementary';
+                                    } elseif (preg_match('/Grade [7-9]|Grade 10/', $gradeLevel)) {
+                                        $department = 'High School';
+                                    } else {
+                                        // Optional: handle other levels (e.g., Kindergarten) or default
+                                        $department = '';
+                                    }
+
+                                    // 3. Fetch faculty belonging to that department
+                                    if (!empty($department)) {
+                                        // Use a prepared statement or escape the department string
+                                        $dept_escaped = mysqli_real_escape_string($conn, $department);
+                                        $faculty_query = "SELECT id, firstName, middleName, lastName 
+                                                        FROM faculty 
+                                                        WHERE department = '$dept_escaped' 
+                                                            AND designation = 'Faculty'
+                                                        ORDER BY lastName, firstName";
+                                        $faculty_result = mysqli_query($conn, $faculty_query);
+
+                                        if ($faculty_result && mysqli_num_rows($faculty_result) > 0) {
+                                            while ($row = mysqli_fetch_assoc($faculty_result)) {
+                                                $firstName = $row['firstName'];
+                                                $middleName = $row['middleName'];
+                                                $lastName = $row['lastName'];
+
+                                                // Format name: e.g., "John A. Doe"
+                                                $facultyLabel = $firstName;
+                                                if (!empty($middleName)) {
+                                                    $facultyLabel .= ' ' . strtoupper(substr($middleName, 0, 1)) . '.';
+                                                }
+                                                $facultyLabel .= ' ' . ucfirst($lastName);  // or your custom capitalization
+
+                                                echo '<option value="' . $row['id'] . '">' . htmlspecialchars($facultyLabel) . '</option>';
+                                            }
+                                        } else {
+                                            echo '<option value="">No faculty found for this department</option>';
+                                        }
+                                    } else {
+                                        echo '<option value="">Unable to determine department</option>';
+                                    }
+                                } else {
+                                    echo '<option value="">Invalid class ID</option>';
+                                }
+                            } else {
+                                echo '<option value="">Class ID not provided</option>';
+                            }
+                            ?>
                        </select>
-                        <label for="edit_faculty_id">Adviser</label>
+                        <label for="edit_faculty_id">Instructor</label>
                        <div class="invalid-feedback">
-                            Please select a valid Adviser.
+                            Please select a valid Instructor.
                         </div>
                     </div>
 
                      <div class="form-floating  mb-3">
-                      <input type="number" step="0.01" class="form-control" id="edit_hours_per_week" name="edit_hours_per_week" placeholder="Your Name" required>
+                      <input type="number" step="0.01" class="form-control" id="edit_hours_per_week" name="edit_hours_per_week" placeholder="Your Name" required readonly>
                       <label for="edit_hours_per_week">Hours/Week</label>
                     </div>
 
+                    <input type="hidden" id="edit_subject_id" name="edit_subject_id">
                     <input type="hidden" id="class_id" name="class_id" value="<?php echo isset($_GET['class_id']) ? $_GET['class_id'] : ''; ?>">
                     <input type="hidden" id="school_year_id" name="school_year_id" value="<?php echo $newest_AY; ?>" >
                     <input type="hidden" id="edit_classload_id" name="edit_classload_id">
@@ -680,45 +745,53 @@ if (mysqli_num_rows($query_run) > 0) {
       var faculty_id = $(this).data('faculty-id');
       var semester = $(this).data('semester');
       var hours_per_week = $(this).data('hours-per-week');
-     
 
       $('#edit_classload_id').val(classload_id);
-      $('#edit_subject_id').val(subject_id);
+      $('#edit_subject_id').val(subject_id);               // preserve current subject
       $('#edit_faculty_id').val(faculty_id);
       $('#edit_semester').val(semester);
       $('#edit_hours_per_week').val(hours_per_week);
 
-      document.getElementById('edit_semester').addEventListener('change', function() {
-    var selectedSemester = this.value;
-    var class_id = "<?php echo $class_id; ?>";
-    var selectedGradeLevel = "<?php echo $gradeLevel; ?>";
-    var subjectSelect = document.getElementById('edit_subject_id');
+      // only update faculty in edit modal – subject and semester are not changeable
+      var selectedGradeLevel = "<?php echo $gradeLevel; ?>";
+      // no need to fetch subjects; we won't change them
 
-    console.log("Selected Grade Level: ", selectedGradeLevel);
-    console.log("Selected Semester: ", selectedSemester);
-    console.log("Selected Semester: ", subjectSelect);
-
-    // Send AJAX request to fetch subjects based on selected grade level and semester
-    fetchSubjects(selectedGradeLevel, selectedSemester);
-});
-
-// Function to fetch subjects based on selected grade level and semester
-function fetchSubjects(selectedGradeLevel, selectedSemester) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'fetch_subjects.php', true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            document.getElementById('edit_subject_id').innerHTML = xhr.responseText;
-        }
-    };
-    xhr.send('gradeLevel=' + encodeURIComponent(selectedGradeLevel) + '&semester=' + encodeURIComponent(selectedSemester));
-}
-    });
+  });
   });
 </script>
 
 <script>
+// helper to fetch hours per week for a given subject, class, school year, and semester
+function fetchAndSetHours(subjectId, hoursInputId) {
+    if (!subjectId) return;
+
+    var classId = document.getElementById('class_id').value;
+    var schoolYearId = document.getElementById('school_year_id').value;
+    var semesterEl = document.getElementById('semester');
+    var semester = semesterEl ? semesterEl.value : '';
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'fetch_hours.php', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                var resp = JSON.parse(xhr.responseText);
+                if (resp.hours !== undefined && resp.hours !== null) {
+                    document.getElementById(hoursInputId).value = resp.hours;
+                }
+            } catch (e) {
+                console.error('Invalid JSON from fetch_hours.php', xhr.responseText);
+            }
+        }
+    };
+    xhr.send('class_id=' + encodeURIComponent(classId) +
+             '&subject_id=' + encodeURIComponent(subjectId) +
+             '&school_year_id=' + encodeURIComponent(schoolYearId) +
+             '&semester=' + encodeURIComponent(semester));
+}
+
+// update subjects dropdown when semester changes (existing logic)
 document.getElementById('semester').addEventListener('change', function() {
     var selectedSemester = this.value;
     var class_id = "<?php echo $class_id; ?>";
@@ -731,19 +804,64 @@ document.getElementById('semester').addEventListener('change', function() {
 
     // Send AJAX request to fetch subjects based on selected grade level and semester
     fetchSubjects(selectedGradeLevel, selectedSemester);
+
+    // also refresh hours for currently chosen subject (if any)
+    var currentSubject = subjectSelect.value;
+    fetchAndSetHours(currentSubject, 'hours_per_week');
 });
 
 // Function to fetch subjects based on selected grade level and semester
-function fetchSubjects(selectedGradeLevel, selectedSemester) {
+// optional currentSubject can be passed to keep it in list when editing
+function fetchSubjects(selectedGradeLevel, selectedSemester, currentSubject, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'fetch_subjects.php', true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
         if (xhr.status === 200) {
             document.getElementById('subject_id').innerHTML = xhr.responseText;
+            if (callback) callback();
         }
     };
-    xhr.send('gradeLevel=' + encodeURIComponent(selectedGradeLevel) + '&semester=' + encodeURIComponent(selectedSemester));
+    var classId = document.getElementById('class_id').value;
+    var schoolYearId = document.getElementById('school_year_id').value;
+    var params = 'gradeLevel=' + encodeURIComponent(selectedGradeLevel) +
+                 '&semester=' + encodeURIComponent(selectedSemester) +
+                 '&class_id=' + encodeURIComponent(classId) +
+                 '&school_year_id=' + encodeURIComponent(schoolYearId);
+    if (currentSubject) {
+        params += '&current_subject_id=' + encodeURIComponent(currentSubject);
+    }
+    xhr.send(params);
+}
+
+// when subject changes in add modal, update hours field
+var addSubjectEl = document.getElementById('subject_id');
+if (addSubjectEl) {
+    addSubjectEl.addEventListener('change', function() {
+        fetchAndSetHours(this.value, 'hours_per_week');
+    });
+}
+
+// when subject changes in edit modal, update hours field
+var editSubjectEl = document.getElementById('edit_subject_id');
+if (editSubjectEl) {
+    editSubjectEl.addEventListener('change', function() {
+        fetchAndSetHours(this.value, 'edit_hours_per_week');
+    });
+}
+
+
+// also refresh hours when semester in edit modal changes
+var editSemester = document.getElementById('edit_semester');
+if (editSemester) {
+    editSemester.addEventListener('change', function() {
+        var subj = document.getElementById('edit_subject_id').value;
+        fetchAndSetHours(subj, 'edit_hours_per_week');
+        // also update the subject list excluding other assigned subjects
+        var selectedGradeLevel = "<?php echo $gradeLevel; ?>";
+        var currentSubject = document.getElementById('edit_subject_id').value;
+        fetchSubjects(selectedGradeLevel, this.value, currentSubject);
+    });
 }
 </script>
 
