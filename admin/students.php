@@ -162,6 +162,12 @@ require '../db_conn.php';
                       </div>
                       <div class="col-md-4 mb-3">
                           <div class="form-floating">
+                              <input type="text" class="form-control" id="age" name="age" placeholder="Age" readonly>
+                              <label for="age">Age</label>
+                          </div>
+                      </div>
+                      <div class="col-md-4 mb-3">
+                          <div class="form-floating">
                               <select class="form-select" id="religion" name="religion" aria-label="Religion" required>
                                   <option selected disabled value>Select Religion</option>
                                   <option value="Catholic">Catholic</option>
@@ -388,6 +394,12 @@ require '../db_conn.php';
                           <div class="form-floating">
                               <input type="date" class="form-control" id="edit_birthday" name="edit_birthday" placeholder="Your Name" required>
                               <label for="edit_birthday">Birthday</label>
+                          </div>
+                      </div>
+                      <div class="col-md-4 mb-3">
+                          <div class="form-floating">
+                              <input type="text" class="form-control" id="edit_age" name="edit_age" placeholder="Age" readonly>
+                              <label for="edit_age">Age</label>
                           </div>
                       </div>
                       <div class="col-md-4 mb-3">
@@ -664,6 +676,7 @@ require '../db_conn.php';
                   <th class="">LRN</th>
                   <th class="">Name</th>
                   <th class="">Gender</th>
+                  <th class="">Age</th>
                   <!-- <th class="">Birthday</th> -->
                   <th class="">Contact Number</th>
                   <!-- <th class="">Home Address</th> -->
@@ -688,6 +701,15 @@ require '../db_conn.php';
                             <td><?= $row['lrn'] ?: '-'; ?></td>
                             <td><?= $row['lastName'] ?: '-' ?>, <?= $row['firstName'] ?: '-' ?> <?= $row['middleName'] ? $row['middleName'][0] . '.' : ''; ?></td>
                             <td><?= $row['gender'] ?: '-'; ?></td>
+                            <td><?php
+                                  if (!empty($row['birthday'])) {
+                                      $birth = new DateTime($row['birthday']);
+                                      $ageValue = $birth->diff(new DateTime())->y;
+                                      echo $ageValue;
+                                  } else {
+                                      echo '-';
+                                  }
+                              ?></td>
                             <!-- <td><?= $row['birthday'] ?: '-'; ?></td> -->
                             <td><?= $row['contactNumber'] ?: '-'; ?></td>
                             <!-- <td><?= $row['homeAddress'] ?: '-'; ?></td> -->
@@ -784,6 +806,22 @@ require '../db_conn.php';
                                                   </div>
                                                   <div class="col-sm-9 col">
                                                     <p class="text-muted mb-0"><?= $row['birthday'] ? date('F j, Y', strtotime($row['birthday'])) : '-' ?></p>
+                                                  </div>
+                                                </div>
+                                                <hr>
+                                                <div class="row">
+                                                  <div class="col-sm-3 col">
+                                                    <p class="mb-0"><strong>Age:</strong></p>
+                                                  </div>
+                                                  <div class="col-sm-9 col">
+                                                    <p class="text-muted mb-0"><?php
+                                                        if ($row['birthday']) {
+                                                            $birth = new DateTime($row['birthday']);
+                                                            echo $birth->diff(new DateTime())->y;
+                                                        } else {
+                                                            echo '-';
+                                                        }
+                                                    ?></p>
                                                   </div>
                                                 </div>
                                                 <hr>
@@ -1105,6 +1143,12 @@ require '../db_conn.php';
       $('#edit_lastName').val(lastName);
       $('#edit_gender').val(gender);
       $('#edit_birthday').val(birthday);
+      // compute age from birthday and fill
+      if (birthday) {
+          $('#edit_age').val(calculateAge(birthday));
+      } else {
+          $('#edit_age').val('');
+      }
       $('#edit_contactNumber').val(contactNumber);
       $('#edit_homeAddress').val(homeAddress);
       $('#edit_email').val(email);
@@ -1121,6 +1165,27 @@ require '../db_conn.php';
       $('#edit_guardianOccupation').val(guardianOccupation);
       $('#edit_guardianContact').val(guardianContact);
       $('#edit_guardianEmail').val(guardianEmail);
+    });
+
+    // age calculation helper
+    function calculateAge(birthdate) {
+        if (!birthdate) return '';
+        var birth = new Date(birthdate);
+        var today = new Date();
+        var age = today.getFullYear() - birth.getFullYear();
+        var m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    // bind change events to update age fields
+    $('#birthday').on('change', function() {
+        $('#age').val(calculateAge($(this).val()));
+    });
+    $('#edit_birthday').on('change', function() {
+        $('#edit_age').val(calculateAge($(this).val()));
     });
   });
 </script>

@@ -6,10 +6,10 @@ if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['u
 
     // Expected header columns – exactly match Import_Student_template (2).xlsx
     $expectedHeaders = [
-        'SR-Code','LRN','First Name','Last Name','Middle Name','Gender','Birthday','Religion','Contact Number','Email Adress','Home Adress',
-        'Fathers Name','Father Occupation','Father Contact','Father Email',
-        'Mothers Name','Mother Occupation','Mother Contact','Mother Email',
-        'Guardian Name','Occupation','Contact Number','Email Adresss'
+        'SR-Code','LRN','First Name','Last Name','Middle Name','Gender','Birthday','Religion','Contact Number','Email Address','Home Address',
+        'Fathers Name','Occupation','Contact Number','Email Address',
+        'Mothers Name','Occupation','Contact Number','Email Address',
+        'Guardian Name','Occupation','Contact Number','Email Address'
     ];
 
     // Helper: normalize header text
