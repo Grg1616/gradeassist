@@ -8,6 +8,15 @@ $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
 $school_year_id = isset($_POST['school_year_id']) ? intval($_POST['school_year_id']) : 0;
 $current_subject = isset($_POST['current_subject_id']) ? intval($_POST['current_subject_id']) : 0;
 
+// if a class_id was supplied, override the grade level with the actual class record
+if ($class_id) {
+    $gl_res = mysqli_query($conn, "SELECT gradeLevel FROM class WHERE id = $class_id LIMIT 1");
+    if ($gl_res && mysqli_num_rows($gl_res) > 0) {
+        $gl_row = mysqli_fetch_assoc($gl_res);
+        $gradeLevel = $gl_row['gradeLevel'];
+    }
+}
+
 // build array of subjects to exclude (already assigned to this class/year and optionally semester)
 $excludeIds = [];
 if ($class_id && $school_year_id) {
@@ -28,7 +37,16 @@ if ($class_id && $school_year_id) {
 }
 
 // Construct main query
-$filter = "WHERE gradeLevel = '$gradeLevel'";
+$filter = "";
+if (!empty($gradeLevel)) {
+    $filter = "WHERE gradeLevel = '" . mysqli_real_escape_string($conn, $gradeLevel) . "'";
+} else {
+    // If no grade level is set, return only the disabled option
+    $options = '<option disabled selected>Select Subject (Class required)</option>';
+    echo $options;
+    exit;
+}
+
 if (!empty($excludeIds)) {
     $filter .= ' AND id NOT IN (' . implode(',', $excludeIds) . ')';
 }
@@ -36,7 +54,7 @@ if (($gradeLevel === 'Grade 11' || $gradeLevel === 'Grade 12') && $semester !== 
     $filter .= " AND semester = $semester";
 }
 
-$query_subjects = "SELECT id, courseCode, courseTitle FROM subjects $filter";
+$query_subjects = "SELECT id, courseCode, courseTitle FROM subjects $filter ORDER BY courseCode";
 $query_run_subjects = mysqli_query($conn, $query_subjects);
 
 // Build options for subject dropdown

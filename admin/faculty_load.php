@@ -18,6 +18,27 @@ if ($result->num_rows > 0) {
 } else {
     $newest_AY = ""; // Set default value if no rows found
 }
+
+// determine the department of the faculty being viewed, if any
+$faculty_department = '';
+$grade_filter = ''; // will be appended to class queries
+$subject_filter = ''; // will be applied to subject queries
+if (isset($_GET['faculty_id']) && is_numeric($_GET['faculty_id'])) {
+    $fid = intval($_GET['faculty_id']);
+    $dept_res = mysqli_query($conn, "SELECT department FROM faculty WHERE id = $fid");
+    if ($dept_res && mysqli_num_rows($dept_res) > 0) {
+        $faculty_department = mysqli_fetch_assoc($dept_res)['department'];
+        if ($faculty_department === 'Elementary') {
+            // only show elementary grade levels / subjects
+            $grade_filter = " AND class.gradeLevel REGEXP 'Grade [1-6]'";
+            $subject_filter = " WHERE gradeLevel REGEXP 'Grade [1-6]'";
+        } elseif ($faculty_department === 'High School') {
+            // show junior & senior high grade levels / subjects
+            $grade_filter = " AND class.gradeLevel REGEXP 'Grade (7|8|9|10|11|12)'";
+            $subject_filter = " WHERE gradeLevel REGEXP 'Grade (7|8|9|10|11|12)'";
+        }
+    }
+}
 ?>
 
 
@@ -67,60 +88,68 @@ if ($result->num_rows > 0) {
             ?>
         </script>
 
+                <!--  add faculty -->
+                <div class="modal fade" id="add_faculty_load" tabindex="-1" aria-labelledby="addFacultyLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addFacultyLabel" style="font-weight: bold;">
+                        <i class="bi bi-plus-circle"></i>&nbsp; Add Faculty Load
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Form -->
+                        <form action="crud_faculty_load.php" method="POST">
 
-          <!--  add faculty -->
-          <div class="modal fade" id="add_faculty_load" tabindex="-1" aria-labelledby="addFacultyLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addFacultyLabel" style="font-weight: bold;">
-          <i class="bi bi-plus-circle"></i>&nbsp; Add Faculty Load
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Form -->
-        <form action="crud_faculty_load.php" method="POST">
+                <!-- Class Dropdown -->
+                <div class="form-floating mb-3">
+                    <select id="class_id" name="class_id" class="form-select" required>
+                        <option disabled selected>Select Class</option>
+                        <?php
+                        $query_class = "SELECT class.id, class.gradeLevel, class.section
+                                        FROM class
+                                        JOIN academic_calendar ON class.school_year_id = academic_calendar.id
+                                        WHERE academic_calendar.id = (SELECT MAX(id) FROM academic_calendar)" . $grade_filter;
+                        $query_run_class = mysqli_query($conn, $query_class);
+                        if (mysqli_num_rows($query_run_class) > 0) {
+                            while ($row = mysqli_fetch_assoc($query_run_class)) {
+                                $classLabel = $row['gradeLevel'] . ' - ' . $row['section'];
+                                echo '<option value="' . $row['id'] . '" data-grade="' . $row['gradeLevel'] . '">' . $classLabel . '</option>';
+                            }
+                        }
+                        ?>
+                    </select>
+                    <label for="class_id">Class</label>
+                </div>
 
-          <!-- Class Dropdown -->
-          <div class="form-floating mb-3">
-            <select id="class_id" name="class_id" class="form-select" aria-label="Select Class" required>
-              <option disabled selected>Select Class</option>
-              <?php
-              $query_class = "SELECT class.id, class.gradeLevel, class.section
-                              FROM class
-                              JOIN academic_calendar ON class.school_year_id = academic_calendar.id
-                              WHERE academic_calendar.id = (SELECT MAX(id) FROM academic_calendar)";
-              $query_run_class = mysqli_query($conn, $query_class);
-              if (mysqli_num_rows($query_run_class) > 0) {
-                  while ($row = mysqli_fetch_assoc($query_run_class)) {
-                      $classLabel = $row['gradeLevel'] . ' - ' . $row['section'];
-                      echo '<option value="' . $row['id'] . '">' . $classLabel . '</option>';
-                  }
-              }
-              ?>
-            </select>
-            <label for="class_id">Class</label>
-          </div>
+                <!-- Semester Dropdown (hidden by default) -->
+                <div class="form-floating mb-3" id="semesterSelect" style="display: none;">
+                    <select class="form-select" id="semester" name="semester" aria-label="Semester">
+                        <option selected disabled value>Select Semester</option>
+                        <option value="1">First Semester</option>
+                        <option value="2">Second Semester</option>
+                    </select>
+                    <label for="semester">Semester</label>
+                </div>
 
-          <!-- Subject Dropdown -->
-          <div class="form-floating mb-3">
-            <select id="subject_id" name="subject_id" class="form-select" aria-label="Select Subject" required>
-              <option disabled selected>Select Subject</option>
-              <?php
-              // ✅ include contactHours here
-              $query_subjects = "SELECT id, courseCode, courseTitle, contactHours FROM subjects";
-              $query_run_subjects = mysqli_query($conn, $query_subjects);
-              if (mysqli_num_rows($query_run_subjects) > 0) {
-                  while ($row = mysqli_fetch_assoc($query_run_subjects)) {
-                      $subjectLabel = $row['courseCode'] . ' - ' . $row['courseTitle'];
-                      echo '<option value="' . $row['id'] . '" data-hours="' . $row['contactHours'] . '">' . $subjectLabel . '</option>';
-                  }
-              }
-              ?>
-            </select>
-            <label for="subject_id">Subject</label>
-          </div>
+                <!-- Subject Dropdown -->
+                <div class="form-floating mb-3">
+                    <select id="subject_id" name="subject_id" class="form-select" required>
+                        <option disabled selected>Select Subject</option>
+                        <?php
+                        $query_subjects = "SELECT id, courseCode, courseTitle, contactHours FROM subjects" . $subject_filter;
+                        $query_run_subjects = mysqli_query($conn, $query_subjects);
+                        if (mysqli_num_rows($query_run_subjects) > 0) {
+                            while ($row = mysqli_fetch_assoc($query_run_subjects)) {
+                                $subjectLabel = $row['courseCode'] . ' - ' . $row['courseTitle'];
+                                echo '<option value="' . $row['id'] . '" data-hours="' . $row['contactHours'] . '">' . $subjectLabel . '</option>';
+                            }
+                        }
+                        ?>
+                    </select>
+                    <label for="subject_id">Subject</label>
+                </div>
 
           <!-- Hours Auto-filled -->
           <div class="form-floating mb-3">
@@ -142,7 +171,7 @@ if ($result->num_rows > 0) {
   </div>
 </div>
 
-<!-- ✅ JavaScript -->
+<!-- ✅ JavaScript for Add Modal -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const subjectSelect = document.getElementById("subject_id");
@@ -162,6 +191,36 @@ document.addEventListener("DOMContentLoaded", function() {
         subjectSelect.selectedIndex = 0; // reset subject dropdown
         hoursInput.value = ""; // clear hours
     });
+});
+</script>
+
+<!-- ✅ Form validation on submit -->
+<script>
+document.querySelector("form[action='crud_faculty_load.php']").addEventListener("submit", function(e) {
+    const classId = document.getElementById("class_id").value;
+    const subjectId = document.getElementById("subject_id").value;
+    
+    if (!classId || classId === "") {
+        e.preventDefault();
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing Class',
+            text: 'Please select a Class before submitting.',
+            showConfirmButton: true
+        });
+        return false;
+    }
+    
+    if (!subjectId || subjectId === "") {
+        e.preventDefault();
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing Subject',
+            text: 'Please select a Subject before submitting.',
+            showConfirmButton: true
+        });
+        return false;
+    }
 });
 </script>
 
@@ -186,7 +245,7 @@ document.addEventListener("DOMContentLoaded", function() {
                             $query_class = "SELECT class.id, class.gradeLevel, class.section
                                               FROM class
                                               JOIN academic_calendar ON class.school_year_id = academic_calendar.id
-                                              WHERE academic_calendar.id = (SELECT MAX(id) FROM academic_calendar)";
+                                              WHERE academic_calendar.id = (SELECT MAX(id) FROM academic_calendar)" . $grade_filter;
 
                             $query_run_class = mysqli_query($conn, $query_class);
                             if (mysqli_num_rows($query_run_class) > 0) {
@@ -216,7 +275,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <select id="edit_subject_id" name="edit_subject_id" class="form-select" aria-label="Select Subject">
                             <option disabled selected>Select Subject</option>
                             <?php
-                            $query_subjects = "SELECT id, courseCode, courseTitle FROM subjects";
+                            $query_subjects = "SELECT id, courseCode, courseTitle FROM subjects" . $subject_filter;
                             $query_run_subjects = mysqli_query($conn, $query_subjects);
                             if (mysqli_num_rows($query_run_subjects) > 0) {
                                 while ($row = mysqli_fetch_assoc($query_run_subjects)) {
@@ -250,6 +309,46 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
           </div>
         </div>
+
+<!-- ✅ Edit form validation on submit -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Find the edit form specifically
+    const editForms = document.querySelectorAll("form[action='crud_faculty_load.php']");
+    editForms.forEach(function(form) {
+        form.addEventListener("submit", function(e) {
+            // Check if this is the edit form by looking for edit_facultyload_id
+            const editLoadId = form.querySelector("#edit_facultyload_id");
+            if (!editLoadId) return; // Not the edit form
+            
+            const classId = form.querySelector("#edit_class_id")?.value;
+            const subjectId = form.querySelector("#edit_subject_id")?.value;
+            
+            if (!classId || classId === "") {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Class',
+                    text: 'Please select a Class before updating.',
+                    showConfirmButton: true
+                });
+                return false;
+            }
+            
+            if (!subjectId || subjectId === "") {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Subject',
+                    text: 'Please select a Subject before updating.',
+                    showConfirmButton: true
+                });
+                return false;
+            }
+        });
+    });
+});
+</script>
 
 
 
@@ -291,27 +390,25 @@ document.addEventListener("DOMContentLoaded", function() {
                         <form class="d-flex ms-auto" id="filterForm" action="" method="GET">
                             <select class="form-select me-1" aria-label="Filter Grade Level" name="faculty_id" id="facultySelect">
                                 <?php
-                                // Fetch faculty data from the "faculty" table ordered by ID in descending order
-                                $query_faculty = "SELECT * FROM faculty ORDER BY id DESC";
+                                // Fetch instructors only (designation = "Faculty") ordered by ID desc
+                                $query_faculty = "SELECT * FROM faculty WHERE designation = 'Faculty' ORDER BY id DESC";
                                 $query_run_faculty = mysqli_query($conn, $query_faculty);
 
                                 if (mysqli_num_rows($query_run_faculty) > 0) {
                                     while ($faculty_member = mysqli_fetch_assoc($query_run_faculty)) {
-                                        // Combine first name, middle name, and last name with proper formatting
+                                        // Combine names
                                         $fullName = $faculty_member['firstName'] . ' ';
                                         if (!empty($faculty_member['middleName'])) {
                                             $fullName .= substr($faculty_member['middleName'], 0, 1) . '. ';
                                         }
                                         $fullName .= $faculty_member['lastName'];
 
-                                        // Check if the current faculty member ID matches the one in the GET request
+                                        // mark selected
                                         $selected = (isset($_GET['faculty_id']) && $_GET['faculty_id'] == $faculty_member['id']) ? 'selected' : '';
 
-                                        // Output the formatted name as the option value with the "selected" attribute
                                         echo '<option value="' . $faculty_member['id'] . '" ' . $selected . '>' . $fullName . '</option>';
                                     }
                                 } else {
-                                    // If there are no classes available for the current academic year, display a disabled option
                                     echo '<option value="" disabled selected>No faculty found</option>';
                                 }
                                 ?>
@@ -360,32 +457,32 @@ if (mysqli_num_rows($query_run) > 0) {
         </div>
     </div>
 
-<?php
-$sql = "SELECT COUNT(DISTINCT subject_id) AS num_ids, 
-               SUM(hours_per_week) AS total_hours_per_week 
-        FROM (SELECT DISTINCT subject_id, hours_per_week 
-              FROM loads 
-              WHERE faculty_id = $faculty_id 
-              AND school_year_id = $newest_AY) AS subquery";
-$result = mysqli_query($conn, $sql);
+            <?php
+            $sql = "SELECT COUNT(DISTINCT subject_id) AS num_ids, 
+                        SUM(hours_per_week) AS total_hours_per_week 
+                    FROM (SELECT DISTINCT subject_id, hours_per_week 
+                        FROM loads 
+                        WHERE faculty_id = $faculty_id 
+                        AND school_year_id = $newest_AY) AS subquery";
+            $result = mysqli_query($conn, $sql);
 
-$regular_hours = 0;
+            $regular_hours = 0;
 
-if ($result) {
-    $row = mysqli_fetch_assoc($result);
-    // Get the number of IDs in class
-    $num_ids = $row['num_ids'];
-    // Calculate Regular and Overload hours
-    $regular_hours = min($row['total_hours_per_week'], 18);
-    $overload_hours = max($row['total_hours_per_week'] - 18, 0);
-} else {
-    // Handle query error
-    echo "Error executing query: " . mysqli_error($conn);
-}
+            if ($result) {
+                $row = mysqli_fetch_assoc($result);
+                // Get the number of IDs in class
+                $num_ids = $row['num_ids'];
+                // Calculate Regular and Overload hours
+                $regular_hours = min($row['total_hours_per_week'], 18);
+                $overload_hours = max($row['total_hours_per_week'] - 18, 0);
+            } else {
+                // Handle query error
+                echo "Error executing query: " . mysqli_error($conn);
+            }
 
-// Free result set
-mysqli_free_result($result);
-?>
+            // Free result set
+            mysqli_free_result($result);
+            ?>
 
 
     <div class="col-lg-4 mt-2">
@@ -581,7 +678,6 @@ $(document).ready(function() {
         var hours_per_week = $(this).data('hours-per-week');
 
         $('#edit_facultyload_id').val(facultyload_id);
-        $('#edit_subject_id').val(subject_id); // Set the selected subject
         $('#edit_class_id').val(class_id);
         $('#edit_gradeLevel').val(gradeLevel);
         $('#edit_hours_per_week').val(hours_per_week);
@@ -593,6 +689,9 @@ $(document).ready(function() {
             $('#edit_semesterSelect').hide();
             $('#edit_semester').val("");
         }
+
+        // immediately populate subject list for the selected class/semester
+        fetchSubjects(gradeLevel, semester, subject_id, class_id);
 
         // Event listener for class select dropdown
 document.getElementById('edit_class_id').addEventListener('change', function() {
@@ -613,7 +712,8 @@ document.getElementById('edit_class_id').addEventListener('change', function() {
     }
 
     // Fetch subjects based on selected grade level and semester
-    fetchSubjects(selectedGradeLevel, selectedSemester);
+    var classId_edit = document.getElementById('edit_class_id').value;
+    fetchSubjects(selectedGradeLevel, selectedSemester, null, classId_edit);
 });
 
 // Event listener for semester select dropdown
@@ -625,20 +725,31 @@ document.getElementById('edit_semester').addEventListener('change', function() {
     console.log("Selected Semester: ", selectedSemester);
 
     // Fetch subjects based on selected grade level and semester
-    fetchSubjects(selectedGradeLevel, selectedSemester);
+    var classId_edit2 = document.getElementById('edit_class_id').value;
+    fetchSubjects(selectedGradeLevel, selectedSemester, null, classId_edit2);
 });
 
 // Function to fetch subjects based on selected grade level and semester
-function fetchSubjects(selectedGradeLevel, selectedSemester) {
+// optional third parameter currentSubject will be selected after loading
+// optional fourth parameter classId is used server-side to determine gradeLevel reliably
+function fetchSubjects(selectedGradeLevel, selectedSemester, currentSubject, classId) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'fetch_subjects.php', true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
         if (xhr.status === 200) {
-            document.getElementById('edit_subject_id').innerHTML = xhr.responseText;
+            var select = document.getElementById('edit_subject_id');
+            select.innerHTML = xhr.responseText;
+            if (currentSubject) {
+                select.value = currentSubject;
+            }
         }
     };
-    xhr.send('gradeLevel=' + encodeURIComponent(selectedGradeLevel) + '&semester=' + encodeURIComponent(selectedSemester));
+    var params = 'gradeLevel=' + encodeURIComponent(selectedGradeLevel) + '&semester=' + encodeURIComponent(selectedSemester);
+    if (classId !== undefined) {
+        params += '&class_id=' + encodeURIComponent(classId);
+    }
+    xhr.send(params);
 }
     });
 });
@@ -664,7 +775,8 @@ document.getElementById('class_id').addEventListener('change', function() {
     }
 
     // Send AJAX request to fetch subjects based on selected grade level and semester
-    fetchSubjects(selectedGradeLevel, selectedSemester);
+    var classId_add = this.value;
+    fetchSubjects(selectedGradeLevel, selectedSemester, null, classId_add);
 });
 
 // Event listener for semester select dropdown
@@ -676,20 +788,30 @@ document.getElementById('semester').addEventListener('change', function() {
     console.log("Selected Semester: ", selectedSemester);
 
     // Send AJAX request to fetch subjects based on selected grade level and semester
-    fetchSubjects(selectedGradeLevel, selectedSemester);
+    var classId_add2 = document.getElementById('class_id').value;
+    fetchSubjects(selectedGradeLevel, selectedSemester, null, classId_add2);
 });
 
 // Function to fetch subjects based on selected grade level and semester
-function fetchSubjects(selectedGradeLevel, selectedSemester) {
+// this version is used by the add modal; accepts optional currentSubject and optional classId
+function fetchSubjects(selectedGradeLevel, selectedSemester, currentSubject, classId) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'fetch_subjects.php', true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
         if (xhr.status === 200) {
-            document.getElementById('subject_id').innerHTML = xhr.responseText;
+            var select = document.getElementById('subject_id');
+            select.innerHTML = xhr.responseText;
+            if (currentSubject) {
+                select.value = currentSubject;
+            }
         }
     };
-    xhr.send('gradeLevel=' + encodeURIComponent(selectedGradeLevel) + '&semester=' + encodeURIComponent(selectedSemester));
+    var params = 'gradeLevel=' + encodeURIComponent(selectedGradeLevel) + '&semester=' + encodeURIComponent(selectedSemester);
+    if (classId !== undefined) {
+        params += '&class_id=' + encodeURIComponent(classId);
+    }
+    xhr.send(params);
 }
 </script>
 
