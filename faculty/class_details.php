@@ -2420,37 +2420,37 @@ if ($query_run) {
 
                 </form>
 
-<!-- Attendance Confirmation Modal -->
-<div class="modal fade" id="attendanceConfirmModal" tabindex="-1" aria-labelledby="attendanceConfirmLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="attendanceConfirmLabel">Confirm Save</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to save the attendance changes?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-success" id="confirmAttendanceSave">
-          <i class="bi bi-save"></i> Save
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+                <!-- Attendance Confirmation Modal -->
+                <div class="modal fade" id="attendanceConfirmModal" tabindex="-1" aria-labelledby="attendanceConfirmLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="attendanceConfirmLabel">Confirm Save</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to save the attendance changes?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="confirmAttendanceSave">
+                        <i class="bi bi-save"></i> Save
+                        </button>
+                    </div>
+                    </div>
+                </div>
+                </div>
 
-<script>
-document.getElementById('attendanceSaveBtn').addEventListener('click', function() {
-    const modal = new bootstrap.Modal(document.getElementById('attendanceConfirmModal'));
-    modal.show();
-});
+                <script>
+                document.getElementById('attendanceSaveBtn').addEventListener('click', function() {
+                    const modal = new bootstrap.Modal(document.getElementById('attendanceConfirmModal'));
+                    modal.show();
+                });
 
-document.getElementById('confirmAttendanceSave').addEventListener('click', function() {
-    document.getElementById('attendanceForm').submit();
-});
-</script>
+                document.getElementById('confirmAttendanceSave').addEventListener('click', function() {
+                    document.getElementById('attendanceForm').submit();
+                });
+                </script>
 
 
                 </div>

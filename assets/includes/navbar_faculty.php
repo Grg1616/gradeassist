@@ -191,7 +191,12 @@ updateClock();
     $user_id = $_SESSION['user_id'];
     $user_type = $_SESSION['userType'];
 
-    // Assuming you have already created a connection to the database in $conn
+    // determine whether this faculty has an advisory class
+    $adv_query = "SELECT id FROM class WHERE faculty_id = $user_id LIMIT 1";
+    $adv_result = mysqli_query($conn, $adv_query);
+    $has_advisory = $adv_result && mysqli_num_rows($adv_result) > 0;
+
+    // note: old "show_reports" variable checked loads; left unchanged for other links
     $query = "SELECT faculty_id FROM loads WHERE faculty_id = $user_id";
     $result = $conn->query($query);
     $show_reports = $result && $result->num_rows > 0; // Check if query was successful and returned rows
@@ -218,12 +223,14 @@ updateClock();
 
 
 
+      <?php if ($has_advisory): ?>
       <li class="nav-item">
         <a class="nav-link collapsed" href="reports.php">
           <i class="bi bi-file-text"></i>
           <span>Reports</span>
         </a>
       </li>
+      <?php endif; ?>
 
       <li class="nav-item">
         <a class="nav-link collapsed" href="downloads.php">

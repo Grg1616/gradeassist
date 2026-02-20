@@ -15,19 +15,19 @@ unset($_SESSION['page']);
 ?>
 
 
-  <main id="main" class="main">
+            <main id="main" class="main">
 
-    <div class="pagetitle">
-      <h1>Reports</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
-          <li class="breadcrumb-item active">Reports</li>
-        </ol>
-      </nav>
-    </div><!-- End Page Title -->
+              <div class="pagetitle">
+                <h1>Reports</h1>
+                <nav>
+                  <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+                    <li class="breadcrumb-item active">Reports</li>
+                  </ol>
+                </nav>
+              </div><!-- End Page Title -->
 
-<script>
+          <script>
             <?php
             // Check if the session message exists and show it as a SweetAlert
             if (isset($_SESSION['message'])) {

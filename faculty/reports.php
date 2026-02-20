@@ -1,9 +1,18 @@
 <?php
 session_start();
 if (isset($_SESSION['id']) && isset($_SESSION['username']) && isset($_SESSION['userType'])) {
-include('../assets/includes/header.php');
-include('../assets/includes/navbar_faculty.php');
-require '../db_conn.php';
+    include('../assets/includes/header.php');
+    include('../assets/includes/navbar_faculty.php');
+    require '../db_conn.php';
+
+    // require that faculty member actually has an advisory class
+    $user_id = $_SESSION['user_id'];
+    $adv_check = mysqli_query($conn, "SELECT id FROM class WHERE faculty_id = $user_id LIMIT 1");
+    if (!($adv_check && mysqli_num_rows($adv_check) > 0)) {
+        // no advisory found, disallow access
+        header('Location: faculty_dashboard.php');
+        exit();
+    }
 
 
 // Unset 'page' from $_GET array
