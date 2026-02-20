@@ -649,13 +649,13 @@ if (mysqli_num_rows($result) > 0) {
         </div>
 
         <div class="card-body">
-          <div class="d-flex align-items-center">
+          <div class="d-flex align-items-center w-100">
               <?php
                 $quarter_names = [
-                    1 => "First Quarter",
-                    2 => "Second Quarter",
-                    3 => "Third Quarter",
-                    4 => "Fourth Quarter"
+                    1 => "Q1 / First Quarter",
+                    2 => "Q2 / Second Quarter",
+                    3 => "Q3 / Third Quarter",
+                    4 => "Q4 / Fourth Quarter"
                 ];
 
                 // Defaulting $quarter to 1 if it's not defined or zero
@@ -668,7 +668,7 @@ if (mysqli_num_rows($result) > 0) {
                     // Output data of each row
                     while($row = $result->fetch_assoc()) {
                         $display_quarter = $quarter_names[$quarter];
-                        echo "<p class=\"m-0 me-2 fw-semibold\">" . $display_quarter . " AY " . $row["start_year"] . "-" . $row["end_year"] . "</p>";
+                        echo "<h5 class=\"m-0 me-2 fw-semibold text-center\">" . $display_quarter . " AY " . $row["start_year"] . "-" . $row["end_year"] . "</h6>";
                     }
                 } else {
                     echo "No results found";
@@ -2539,10 +2539,11 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 
-  const selectedTabGrades = localStorage.getItem('selectedTabGrades');
-  if (selectedTabGrades) {
-    document.getElementById(selectedTabGrades).click();
-  }
+    const selectedTabGrades = localStorage.getItem('selectedTabGrades');
+    if (selectedTabGrades) {
+        const el = document.getElementById(selectedTabGrades);
+        if (el) el.click();
+    }
 });
 
 // For the second set of tabs
@@ -2559,10 +2560,11 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 
-  const selectedTabWrittenWorks = localStorage.getItem('selectedTabWrittenWorks');
-  if (selectedTabWrittenWorks) {
-    document.getElementById(selectedTabWrittenWorks).click();
-  }
+    const selectedTabWrittenWorks = localStorage.getItem('selectedTabWrittenWorks');
+    if (selectedTabWrittenWorks) {
+        const el2 = document.getElementById(selectedTabWrittenWorks);
+        if (el2) el2.click();
+    }
 });
 </script>
 <script>
@@ -2574,37 +2576,29 @@ document.addEventListener("DOMContentLoaded", function() {
             var spans = document.querySelectorAll('.' + readOnlyClass);
             var inputs = document.querySelectorAll('.' + editableClass);
             var saveButton = document.getElementById(saveButtonId);
-            
+
             // Determine toggle label ID based on switch ID
-            var toggleLabelId = switchId.replace('Check', 'Check') === 'flexSwitchCheckDefault' ? 'toggleLabel' : 
+            var toggleLabelId = switchId === 'flexSwitchCheckDefault' ? 'toggleLabel' : 
                                 switchId === 'customFlexSwitchCheckDefault' ? 'customToggleLabel' : 'thirdToggleLabel';
             var toggleLabel = document.getElementById(toggleLabelId);
-            
-            if (switchState === 'true') {
-                switchElement.checked = true;
-                toggleEditable(true); // Enable editable mode if switch is checked
-            } else {
-                switchElement.checked = false;
-                toggleEditable(false); // Disable editable mode if switch is unchecked
-            }
 
-            // Function to toggle editable mode
+            // Safely toggle editable mode for elements and the save button
             function toggleEditable(editable) {
-                for (var i = 0; i < spans.length; i++) {
-                    if (editable) {
-                        spans[i].style.display = 'none';
-                        inputs[i].style.display = 'inline-block';
-                        saveButton.style.display = 'inline-block'; // Show the button
-                    } else {
-                        spans[i].style.display = 'inline-block';
-                        inputs[i].style.display = 'none';
-                        saveButton.style.display = 'none'; // Hide the button
-                    }
+                // Toggle readonly spans and editable inputs
+                for (var i = 0; i < Math.max(spans.length, inputs.length); i++) {
+                    if (spans[i]) spans[i].style.display = editable ? 'none' : 'inline-block';
+                    if (inputs[i]) inputs[i].style.display = editable ? 'inline-block' : 'none';
                 }
+
+                // Ensure save button is toggled even if there are no span/input elements
+                if (saveButton) {
+                    saveButton.style.display = editable ? 'inline-block' : 'none';
+                }
+
                 // Update toggle label
                 if (toggleLabel) {
                     if (editable) {
-                        toggleLabel.textContent = '*editable';
+                        toggleLabel.textContent = 'Active';
                         toggleLabel.classList.add('active');
                     } else {
                         toggleLabel.textContent = '';
@@ -2613,16 +2607,27 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             }
 
-            // Event listener for switch change
-            switchElement.addEventListener('change', function() {
-                if (this.checked) {
-                    localStorage.setItem(switchStateKey, 'true');
-                    toggleEditable(true); // Enable editable mode if switch is checked
+            // Initialize based on stored value (default false)
+            if (switchElement) {
+                if (switchState === 'true') {
+                    switchElement.checked = true;
+                    toggleEditable(true);
                 } else {
-                    localStorage.setItem(switchStateKey, 'false');
-                    toggleEditable(false); // Disable editable mode if switch is unchecked
+                    switchElement.checked = false;
+                    toggleEditable(false);
                 }
-            });
+
+                // Event listener for switch change
+                switchElement.addEventListener('change', function() {
+                    if (this.checked) {
+                        localStorage.setItem(switchStateKey, 'true');
+                        toggleEditable(true);
+                    } else {
+                        localStorage.setItem(switchStateKey, 'false');
+                        toggleEditable(false);
+                    }
+                });
+            }
         }
 
         // Call setSwitchState function for the first switch
